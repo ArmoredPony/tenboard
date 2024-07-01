@@ -4,7 +4,7 @@ use crate::hands::{FingerState, HandsState};
 pub trait Metric: Sized {
   /// Updates metric's state with data from given `handstate`.
   fn update_once(&mut self, handstate: &HandsState);
-  
+
   /// Updates metric's state with data from given `handstates`.
   fn update(&mut self, handstates: &[HandsState]) {
     for hs in handstates {
@@ -25,14 +25,12 @@ pub trait Metric: Sized {
 /// Measures finger usage.
 #[derive(Debug, Default)]
 pub struct FingerUsage {
-  presses: [u32; 10]
+  presses: [u32; 10],
 }
 
 impl FingerUsage {
   pub fn new() -> Self {
-    Self {
-      presses: [0; 10]
-    }
+    Self { presses: [0; 10] }
   }
 }
 
@@ -51,14 +49,12 @@ impl Metric for FingerUsage {
 /// Measures hand usage.
 #[derive(Debug, Default)]
 pub struct HandUsage {
-  presses: [u32; 2]
+  presses: [u32; 2],
 }
 
 impl HandUsage {
   pub fn new() -> Self {
-    Self {
-      presses: [0; 2]
-    }
+    Self { presses: [0; 2] }
   }
 }
 
@@ -78,7 +74,7 @@ impl From<FingerUsage> for HandUsage {
   fn from(value: FingerUsage) -> Self {
     let (lh, rh) = value.presses.split_at(5);
     Self {
-      presses: [lh.iter().sum(), rh.iter().sum()]
+      presses: [lh.iter().sum(), rh.iter().sum()],
     }
   }
 }
@@ -156,9 +152,9 @@ impl Metric for HandAlternation {
 
 /// Measures finger usage balance. Compares it to target balance ratio.
 #[derive(Debug, Default)]
-pub struct FingerBalance{
+pub struct FingerBalance {
   presses: [u32; 10],
-  target_ratio: [f32; 10]
+  target_ratio: [f32; 10],
 }
 
 impl FingerBalance {
@@ -167,14 +163,14 @@ impl FingerBalance {
     self.target_ratio = target_ratio.map(|r| r / sum);
     self
   }
-  
+
   pub fn new() -> Self {
     Self {
       presses: [0; 10],
-      target_ratio: [0.1; 10]
+      target_ratio: [0.1; 10],
     }
   }
-  
+
   pub fn new_with_ratio(target_ratio: [f32; 10]) -> Self {
     let mut fb = Self::new();
     fb.set_ratio(target_ratio);
@@ -182,7 +178,7 @@ impl FingerBalance {
   }
 }
 
-impl Metric for FingerBalance{
+impl Metric for FingerBalance {
   fn update_once(&mut self, handstate: &HandsState) {
     for (fc, fs) in self.presses.iter_mut().zip(handstate.iter()) {
       *fc += u32::from(*fs);
@@ -192,7 +188,11 @@ impl Metric for FingerBalance{
   fn score(&self) -> f32 {
     let total_presses = self.presses.iter().sum::<u32>() as f32;
     let ratio = self.presses.map(|v| v as f32 / total_presses);
-    ratio.iter().zip(self.target_ratio).map(|(a, b)| (a - b).abs()).sum()
+    ratio
+      .iter()
+      .zip(self.target_ratio)
+      .map(|(a, b)| (a - b).abs())
+      .sum()
   }
 }
 
@@ -200,16 +200,16 @@ impl From<FingerUsage> for FingerBalance {
   fn from(value: FingerUsage) -> Self {
     Self {
       presses: value.presses,
-      target_ratio: [0.1; 10]
+      target_ratio: [0.1; 10],
     }
   }
 }
 
 /// Measures hand usage balance. Compares it to target balance ratio.
 #[derive(Debug, Default)]
-pub struct HandBalance{
+pub struct HandBalance {
   presses: [u32; 2],
-  target_ratio: [f32; 2]
+  target_ratio: [f32; 2],
 }
 
 impl HandBalance {
@@ -218,14 +218,14 @@ impl HandBalance {
     self.target_ratio = target_ratio.map(|r| r / sum);
     self
   }
-  
+
   pub fn new() -> Self {
     Self {
       presses: [0; 2],
-      target_ratio: [0.5; 2]
+      target_ratio: [0.5; 2],
     }
   }
-  
+
   pub fn new_with_ratio(target_ratio: [f32; 2]) -> Self {
     let mut fb = Self::new();
     fb.set_ratio(target_ratio);
@@ -233,7 +233,7 @@ impl HandBalance {
   }
 }
 
-impl Metric for HandBalance{
+impl Metric for HandBalance {
   fn update_once(&mut self, handstate: &HandsState) {
     for (fc, hand) in self.presses.iter_mut().zip(handstate.hand_iter()) {
       *fc += hand.iter().map(|fs| u32::from(*fs)).sum::<u32>()
@@ -243,7 +243,11 @@ impl Metric for HandBalance{
   fn score(&self) -> f32 {
     let total_presses = self.presses.iter().sum::<u32>() as f32;
     let ratio = self.presses.map(|v| v as f32 / total_presses);
-    ratio.iter().zip(self.target_ratio).map(|(a, b)| (a - b).abs()).sum()
+    ratio
+      .iter()
+      .zip(self.target_ratio)
+      .map(|(a, b)| (a - b).abs())
+      .sum()
   }
 }
 
@@ -251,7 +255,7 @@ impl From<HandUsage> for HandBalance {
   fn from(value: HandUsage) -> Self {
     Self {
       presses: value.presses,
-      target_ratio: [0.5; 2]
+      target_ratio: [0.5; 2],
     }
   }
 }
@@ -273,8 +277,8 @@ impl From<FingerBalance> for HandBalance {
 
 #[cfg(test)]
 mod tests {
-  use crate::keyboard::{Keyboard, NoSuchChar};
   use super::*;
+  use crate::keyboard::{Keyboard, NoSuchChar};
 
   struct TestKeyboard {}
 
@@ -301,10 +305,7 @@ mod tests {
       &mut self,
       text: &str,
     ) -> Result<Vec<HandsState>, NoSuchChar> {
-      text
-        .chars()
-        .map(|ch| self.try_type_char(ch))
-        .collect()
+      text.chars().map(|ch| self.try_type_char(ch)).collect()
     }
   }
 
@@ -367,8 +368,10 @@ mod tests {
     assert_eq!(fb.presses, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
     assert_eq!(fb.score(), 0.0);
 
-    let fb = FingerBalance::new_with_ratio([1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
-      .updated(&kb.type_text(text));
+    let fb = FingerBalance::new_with_ratio([
+      1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+    ])
+    .updated(&kb.type_text(text));
     assert_eq!(fb.presses, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
     assert!(fb.score() - 1.6 < 1.0e-6);
 
@@ -385,8 +388,9 @@ mod tests {
     let hb = HandBalance::new().updated(&kb.type_text(text));
     assert_eq!(hb.presses, [5, 5]);
     assert_eq!(hb.score(), 0.0);
-    
-    let hb = HandBalance::new_with_ratio([3.0, 7.0]).updated(&kb.type_text(text));
+
+    let hb = HandBalance::new_with_ratio([3.0, 7.0]) //
+      .updated(&kb.type_text(text));
     assert_eq!(hb.presses, [5, 5]);
     assert!(hb.score() - 0.4 < 1.0e-6);
 

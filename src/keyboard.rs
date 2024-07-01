@@ -62,10 +62,7 @@ mod tests {
       &mut self,
       text: &str,
     ) -> Result<Vec<HandsState>, NoSuchChar> {
-      text
-        .chars()
-        .map(|ch| self.try_type_char(ch))
-        .collect()
+      text.chars().map(|ch| self.try_type_char(ch)).collect()
     }
   }
 
