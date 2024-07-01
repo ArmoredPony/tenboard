@@ -284,9 +284,13 @@ mod tests {
         'a' => Ok([1, 0, 0, 0, 0, 0, 0, 0, 0, 0].into()),
         'b' => Ok([0, 1, 0, 0, 0, 0, 0, 0, 0, 0].into()),
         'c' => Ok([0, 0, 1, 0, 0, 0, 0, 0, 0, 0].into()),
-        'e' => Ok([0, 0, 0, 0, 0, 0, 0, 1, 0, 0].into()),
-        'f' => Ok([0, 0, 0, 0, 0, 0, 0, 0, 1, 0].into()),
-        'g' => Ok([0, 0, 0, 0, 0, 0, 0, 0, 0, 1].into()),
+        'd' => Ok([0, 0, 0, 0, 0, 0, 0, 1, 0, 0].into()),
+        'e' => Ok([0, 0, 0, 0, 0, 0, 0, 0, 1, 0].into()),
+        'f' => Ok([0, 0, 0, 0, 0, 0, 0, 0, 0, 1].into()),
+        'p' => Ok([0, 0, 0, 1, 0, 0, 0, 0, 0, 0].into()),
+        'q' => Ok([0, 0, 0, 0, 1, 0, 0, 0, 0, 0].into()),
+        'r' => Ok([0, 0, 0, 0, 0, 1, 0, 0, 0, 0].into()),
+        's' => Ok([0, 0, 0, 0, 0, 0, 1, 0, 0, 0].into()),
         _ => Err(NoSuchChar { ch }),
       }
     }
@@ -302,5 +306,98 @@ mod tests {
         .map(|ch| self.try_type_char(ch))
         .collect()
     }
+  }
+
+  #[test]
+  fn test_finger_usage() {
+    let mut kb = TestKeyboard {};
+    let text = "abcdefadab";
+    let fu = FingerUsage::new().updated(&kb.type_text(text));
+    assert_eq!(fu.presses, [3, 2, 1, 0, 0, 0, 0, 2, 1, 1]);
+    assert_eq!(fu.score(), 10.0);
+  }
+
+  #[test]
+  fn test_hand_usage() {
+    let mut kb = TestKeyboard {};
+    let text = "abcdefadab";
+    let hu = HandUsage::new().updated(&kb.type_text(text));
+    assert_eq!(hu.presses, [6, 4]);
+    assert_eq!(hu.score(), 10.0);
+
+    let fu = FingerUsage::new().updated(&kb.type_text(text));
+    let hu = HandUsage::from(fu);
+    assert_eq!(hu.presses, [6, 4]);
+    assert_eq!(hu.score(), 10.0);
+  }
+
+  #[test]
+  fn test_finger_alternation() {
+    let mut kb = TestKeyboard {};
+    let text = "abcdef";
+    let fa = FingerAlternation::new().updated(&kb.type_text(text));
+    assert_eq!(fa.consecutive_presses, [0; 10]);
+    assert_eq!(fa.score(), 0.0);
+
+    let text = "aacffeddaaaaba";
+    let fa = FingerAlternation::new().updated(&kb.type_text(text));
+    assert_eq!(fa.consecutive_presses, [4, 0, 0, 0, 0, 0, 0, 1, 0, 1]);
+    assert_eq!(fa.score(), 6.0);
+  }
+
+  #[test]
+  fn test_hand_alternation() {
+    let mut kb = TestKeyboard {};
+    let text = "adbecf";
+    let ha = HandAlternation::new().updated(&kb.type_text(text));
+    assert_eq!(ha.consecutive_presses, [0; 2]);
+    assert_eq!(ha.score(), 0.0);
+
+    let text = "abcadefafef";
+    let ha = HandAlternation::new().updated(&kb.type_text(text));
+    assert_eq!(ha.consecutive_presses, [3, 4]);
+    assert_eq!(ha.score(), 7.0);
+  }
+
+  #[test]
+  fn test_finger_balance() {
+    let mut kb = TestKeyboard {};
+    let text = "abcdefpqrs";
+    let fb = FingerBalance::new().updated(&kb.type_text(text));
+    assert_eq!(fb.presses, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
+    assert_eq!(fb.score(), 0.0);
+
+    let fb = FingerBalance::new_with_ratio([1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+      .updated(&kb.type_text(text));
+    assert_eq!(fb.presses, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
+    assert!(fb.score() - 1.6 < 1.0e-6);
+
+    let fu = FingerUsage::new().updated(&kb.type_text(text));
+    let fb = FingerBalance::from(fu);
+    assert_eq!(fb.presses, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
+    assert_eq!(fb.score(), 0.0);
+  }
+
+  #[test]
+  fn test_hand_balance() {
+    let mut kb = TestKeyboard {};
+    let text = "abcdefpqrs";
+    let hb = HandBalance::new().updated(&kb.type_text(text));
+    assert_eq!(hb.presses, [5, 5]);
+    assert_eq!(hb.score(), 0.0);
+    
+    let hb = HandBalance::new_with_ratio([3.0, 7.0]).updated(&kb.type_text(text));
+    assert_eq!(hb.presses, [5, 5]);
+    assert!(hb.score() - 0.4 < 1.0e-6);
+
+    let hu = HandUsage::new().updated(&kb.type_text(text));
+    let hb = HandBalance::from(hu);
+    assert_eq!(hb.presses, [5, 5]);
+    assert_eq!(hb.score(), 0.0);
+
+    let fb = FingerBalance::new().updated(&kb.type_text(text));
+    let hb = HandBalance::from(fb);
+    assert_eq!(hb.presses, [5, 5]);
+    assert_eq!(hb.score(), 0.0);
   }
 }
