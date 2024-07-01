@@ -64,7 +64,7 @@ impl HandUsage {
 
 impl Metric for HandUsage {
   fn update_once(&mut self, handstate: &HandsState) {
-    for (hc, hs) in self.presses.iter_mut().zip(handstate.chunks(2)) {
+    for (hc, hs) in self.presses.iter_mut().zip(handstate.hand_iter()) {
       *hc += hs.iter().map(|fs| u32::from(*fs)).sum::<u32>();
     }
   }
@@ -139,7 +139,7 @@ impl Metric for HandAlternation {
     for (cp, (last_hand_used, curr_hs)) in self
       .consecutive_presses
       .iter_mut()
-      .zip(self.last_hands_used.iter_mut().zip(handstate.chunks(2)))
+      .zip(self.last_hands_used.iter_mut().zip(handstate.hand_iter()))
     {
       let next_hand_used = curr_hs.iter().any(|fs| *fs == FingerState::Pressed);
       if *last_hand_used && next_hand_used {
