@@ -29,7 +29,7 @@ impl From<i32> for FingerState {
   }
 }
 
-impl From<FingerState> for i32 {
+impl From<FingerState> for u32 {
   fn from(value: FingerState) -> Self {
     match value {
       FingerState::Pressed => 1,
@@ -114,9 +114,9 @@ mod tests{
 
   #[test]
   fn test_finger_state_to_int() {
-    assert_eq!(i32::from(FingerState::Pressed), 1);
-    assert_eq!(i32::from(FingerState::Released), 0);
-    let x: i32 = 1;
-    assert_eq!(x + i32::from(FingerState::Pressed), 2);
+    assert_eq!(u32::from(FingerState::Pressed), 1);
+    assert_eq!(u32::from(FingerState::Released), 0);
+    let x: u32 = 1;
+    assert_eq!(x + u32::from(FingerState::Pressed), 2);
   }
 }
