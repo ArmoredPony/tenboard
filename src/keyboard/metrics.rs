@@ -1,9 +1,11 @@
 use crate::hands::{FingerState, HandsState};
 
+/// Describes metric used to measure keyboard layout efficiency.
 pub trait Metric {
   /// Updates metric's state with data from given `handstate`.
   fn update_once(&mut self, handstate: &HandsState);
-
+  
+  /// Updates metric's state with data from given `handstates`.
   fn update(&mut self, handstates: &[HandsState]) {
     for hs in handstates {
       self.update_once(hs);
@@ -14,7 +16,7 @@ pub trait Metric {
   fn score(&self) -> f32;
 }
 
-/// Counts presses of each finger.
+/// Measures finger usage.
 #[derive(Debug, Default)]
 pub struct FingerPresses([u32; 10]);
 
@@ -36,7 +38,7 @@ impl Metric for FingerPresses {
   }
 }
 
-/// Counts each hand usage.
+/// Measures hand usage.
 #[derive(Debug, Default)]
 pub struct HandPresses([u32; 2]);
 
@@ -65,14 +67,14 @@ impl From<FingerPresses> for HandPresses {
   }
 }
 
-/// Counts consecutive presses of each finger
+/// Measures finger alternation.
 #[derive(Debug, Default)]
-pub struct FingerPressesConsecutive {
+pub struct FingerAlternation {
   last_handstate: HandsState,
   consecutive_presses: [u32; 10],
 }
 
-impl FingerPressesConsecutive {
+impl FingerAlternation {
   pub fn new() -> Self {
     Self {
       last_handstate: [0; 10].into(),
@@ -81,7 +83,7 @@ impl FingerPressesConsecutive {
   }
 }
 
-impl Metric for FingerPressesConsecutive {
+impl Metric for FingerAlternation {
   fn update_once(&mut self, handstate: &HandsState) {
     for (cp, (last_fs, curr_fs)) in self
       .consecutive_presses
@@ -100,14 +102,14 @@ impl Metric for FingerPressesConsecutive {
   }
 }
 
-/// Counts consecutive presses of each hand
+/// Measures hand alternation.
 #[derive(Debug, Default)]
-pub struct HandPressesConsecutive {
+pub struct HandAlternation {
   last_hands_used: [bool; 2],
   consecutive_presses: [u32; 2],
 }
 
-impl HandPressesConsecutive {
+impl HandAlternation {
   pub fn new() -> Self {
     Self {
       last_hands_used: [false; 2],
@@ -116,7 +118,7 @@ impl HandPressesConsecutive {
   }
 }
 
-impl Metric for HandPressesConsecutive {
+impl Metric for HandAlternation {
   fn update_once(&mut self, handstate: &HandsState) {
     for (cp, (last_hand_used, curr_hs)) in self
       .consecutive_presses
