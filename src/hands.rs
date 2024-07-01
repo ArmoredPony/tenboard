@@ -3,7 +3,7 @@
 
 use std::{
   fmt::Display,
-  ops::{Deref, DerefMut},
+  ops::{Deref, DerefMut}, slice::Chunks,
 };
 
 /// Represents a finger state. Can be either pressed or released.
@@ -58,6 +58,13 @@ impl Display for FingerState {
 /// </pre>
 #[derive(Default, Debug, Eq, PartialEq, Clone, Copy)]
 pub struct HandsState(pub [FingerState; 10]);
+
+impl HandsState {
+  /// Returns iterator over finger states for left then right hand.
+  pub fn hand_iter(&self) -> Chunks<FingerState> {
+    self.0.chunks(5)
+  }
+}
 
 impl From<[i32; 10]> for HandsState {
   fn from(value: [i32; 10]) -> Self {
