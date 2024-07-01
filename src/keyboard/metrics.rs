@@ -171,7 +171,7 @@ impl FingerBalance {
   pub fn new() -> Self {
     Self {
       presses: [0; 10],
-      target_ratio: [0.0; 10]
+      target_ratio: [0.1; 10]
     }
   }
   
@@ -200,7 +200,7 @@ impl From<FingerUsage> for FingerBalance {
   fn from(value: FingerUsage) -> Self {
     Self {
       presses: value.presses,
-      target_ratio: [0.0; 10]
+      target_ratio: [0.1; 10]
     }
   }
 }
@@ -222,7 +222,7 @@ impl HandBalance {
   pub fn new() -> Self {
     Self {
       presses: [0; 2],
-      target_ratio: [0.0; 2]
+      target_ratio: [0.5; 2]
     }
   }
   
@@ -235,8 +235,8 @@ impl HandBalance {
 
 impl Metric for HandBalance{
   fn update_once(&mut self, handstate: &HandsState) {
-    for (fc, fs) in self.presses.iter_mut().zip(handstate.iter()) {
-      *fc += u32::from(*fs);
+    for (fc, hand) in self.presses.iter_mut().zip(handstate.hand_iter()) {
+      *fc += hand.iter().map(|fs| u32::from(*fs)).sum::<u32>()
     }
   }
 
@@ -251,7 +251,7 @@ impl From<HandUsage> for HandBalance {
   fn from(value: HandUsage) -> Self {
     Self {
       presses: value.presses,
-      target_ratio: [0.0; 2]
+      target_ratio: [0.5; 2]
     }
   }
 }
