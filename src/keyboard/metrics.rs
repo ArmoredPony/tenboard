@@ -198,3 +198,69 @@ impl From<FingerUsage> for FingerBalance {
     }
   }
 }
+
+/// Measures hand usage balance. Compares it to target balance ratio.
+#[derive(Debug, Default)]
+pub struct HandBalance{
+  presses: [u32; 2],
+  target_ratio: [f32; 2]
+}
+
+impl HandBalance {
+  pub fn set_ratio(&mut self, target_ratio: [f32; 2]) -> &mut Self {
+    let sum = target_ratio.iter().sum::<f32>();
+    self.target_ratio = target_ratio.map(|r| r / sum);
+    self
+  }
+  
+  pub fn new() -> Self {
+    Self {
+      presses: [0; 2],
+      target_ratio: [0.0; 2]
+    }
+  }
+  
+  pub fn new_with_ratio(target_ratio: [f32; 2]) -> Self {
+    let mut fb = Self::new();
+    fb.set_ratio(target_ratio);
+    fb
+  }
+}
+
+impl Metric for HandBalance{
+  fn update_once(&mut self, handstate: &HandsState) {
+    for (fc, fs) in self.presses.iter_mut().zip(handstate.iter()) {
+      *fc += *fs as u32;
+    }
+  }
+
+  fn score(&self) -> f32 {
+    let total_presses = self.presses.iter().sum::<u32>() as f32;
+    let ratio = self.presses.map(|v| v as f32 / total_presses);
+    ratio.iter().zip(self.target_ratio).map(|(a, b)| (a - b).abs()).sum()
+  }
+}
+
+impl From<HandUsage> for HandBalance {
+  fn from(value: HandUsage) -> Self {
+    Self {
+      presses: value.presses,
+      target_ratio: [0.0; 2]
+    }
+  }
+}
+
+impl From<FingerBalance> for HandBalance {
+  fn from(value: FingerBalance) -> Self {
+    Self {
+      presses: {
+        let (left, right) = value.presses.split_at(5);
+        [left.iter().sum(), right.iter().sum()]
+      },
+      target_ratio: {
+        let (left, right) = value.target_ratio.split_at(5);
+        [left.iter().sum(), right.iter().sum()]
+      },
+    }
+  }
+}
