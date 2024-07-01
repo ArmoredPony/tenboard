@@ -1,7 +1,7 @@
 use crate::hands::{FingerState, HandsState};
 
 /// Describes metric used to measure keyboard layout efficiency.
-pub trait Metric {
+pub trait Metric: Sized {
   /// Updates metric's state with data from given `handstate`.
   fn update_once(&mut self, handstate: &HandsState);
   
@@ -10,6 +10,12 @@ pub trait Metric {
     for hs in handstates {
       self.update_once(hs);
     }
+  }
+
+  /// Consumes `self`, then `update`s and returns it.
+  fn updated(mut self, handstates: &[HandsState]) -> Self {
+    self.update(handstates);
+    self
   }
 
   /// Returns metric's score. The lower - the better.
