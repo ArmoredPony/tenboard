@@ -15,9 +15,8 @@ pub trait Keyboard {
     chars: impl Iterator<Item = char>,
   ) -> Result<Vec<HandsState>, NoSuchChar>;
 
-  /// Emulates typing a char sequence with the keyboard.
   /// Returns a sequence of hand states that describe necessary finger presses
-  /// for that char sequence to be typed.
+  /// for given char sequence to be typed.
   ///
   /// # Panics
   ///
