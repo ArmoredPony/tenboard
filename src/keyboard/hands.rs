@@ -15,6 +15,16 @@ pub enum FingerState {
   Released,
 }
 
+impl FingerState {
+  pub fn is_pressed(&self) -> bool {
+    *self == Self::Pressed
+  }
+
+  pub fn is_released(&self) -> bool {
+    *self == Self::Released
+  }
+}
+
 impl From<bool> for FingerState {
   fn from(value: bool) -> Self {
     match value {
@@ -61,6 +71,19 @@ impl Display for FingerState {
 pub struct HandsState(pub [FingerState; 10]);
 
 impl HandsState {
+  /// Returns iterator producing unique `HandsState` objects with one or two
+  /// fingers pressed.
+  pub fn iterate_unique() -> impl Iterator<Item = HandsState> {
+    (0..10).flat_map(|i| {
+      (i..10).map(move |j| {
+        let mut fs = [0; 10];
+        fs[i] = 1;
+        fs[j] = 1;
+        HandsState::from(fs)
+      })
+    })
+  }
+
   /// Returns iterator over finger states for left then right hand.
   pub fn hand_iter(&self) -> Chunks<FingerState> {
     self.0.chunks(5)
@@ -126,5 +149,15 @@ mod tests {
     assert_eq!(u32::from(FingerState::Released), 0);
     let x: u32 = 1;
     assert_eq!(x + u32::from(FingerState::Pressed), 2);
+  }
+
+  #[test]
+  fn test_iterate_inique_handsstates() {
+    let handsstates: Vec<_> = HandsState::iterate_unique().collect();
+    assert_eq!(handsstates.len(), 55);
+    assert!(handsstates.iter().all(|hs| {
+      let s = hs.into_iter().filter(FingerState::is_pressed).count();
+      s == 1 || s == 2
+    }))
   }
 }
