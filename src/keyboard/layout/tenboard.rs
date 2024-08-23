@@ -85,3 +85,66 @@ impl Tenboard for TenboardThumbConstrained {
     }
   }
 }
+
+/// Constrained Tenboard layout.
+/// 'whitespace' and 'enter' are bound to single key thumb chords,
+/// lowercase letters are bound to other 8 single key chords.
+/// uppercase characters are bound to lowercase chords + `whitespace_hs`,
+/// punctuiation characters and numbers are bound to other chords + `newline_hs`.
+pub struct TenboardModifierConstrained {
+  whitespace_hs: HandsState,
+  newline_hs: HandsState,
+  lowercase_digit_layout: HashMap<char, HandsState>,
+  punctuation_layout: HashMap<char, HandsState>,
+}
+
+impl Tenboard for TenboardModifierConstrained {
+  fn new_random() -> Self {
+    let mut rng = rand::thread_rng();
+    let (whitespace_hs, newline_hs) = if rng.gen_bool(0.5) {
+      (HandsState::left_thumb(), HandsState::right_thumb())
+    } else {
+      (HandsState::right_thumb(), HandsState::left_thumb())
+    };
+    let mut lowercase_digit_hs: Vec<_> =
+      HandsState::iterate_one_two_key_no_thumbs().collect();
+    let mut punctuation_hs: Vec<_> =
+      HandsState::iterate_one_two_key_no_thumbs()
+        .map(|hs| hs.combine(&newline_hs))
+        .collect();
+    lowercase_digit_hs.shuffle(&mut rng);
+    punctuation_hs.shuffle(&mut rng);
+    Self {
+      whitespace_hs,
+      newline_hs,
+      lowercase_digit_layout: HashMap::from_iter(
+        LOWERCASE_CHARS
+          .chars()
+          .chain(DIGIT_CHARS.chars())
+          .zip(lowercase_digit_hs),
+      ),
+      punctuation_layout: HashMap::from_iter(
+        PUNCTUATION_CHARS
+          .chars()
+          .filter(|&ch| ch != ' ' && ch != '\n')
+          .zip(punctuation_hs),
+      ),
+    }
+  }
+
+  fn try_type_char(&mut self, ch: char) -> Result<HandsState, NoSuchChar> {
+    match ch {
+      ' ' => Some(self.whitespace_hs),
+      '\n' => Some(self.newline_hs),
+      _ if ch.is_lowercase() || ch.is_ascii_digit() => {
+        self.lowercase_digit_layout.get(&ch).copied()
+      }
+      _ if ch.is_uppercase() => self
+        .lowercase_digit_layout
+        .get(&ch.to_ascii_lowercase())
+        .map(|hs| hs.combine(&self.whitespace_hs)),
+      _ => self.punctuation_layout.get(&ch).copied(),
+    }
+    .ok_or(NoSuchChar { ch })
+  }
+}
