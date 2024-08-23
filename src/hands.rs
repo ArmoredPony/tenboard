@@ -41,7 +41,7 @@ impl From<FingerState> for i32 {
 impl Display for FingerState {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     match self {
-      FingerState::Pressed => write!(f, ""),
+      FingerState::Pressed => write!(f, "|"),
       FingerState::Released => write!(f, "."),
     }
   }
@@ -92,5 +92,31 @@ impl Display for HandsState {
     lh.iter().try_for_each(|fs| write!(f, "{}", fs))?;
     write!(f, " ")?;
     rh.iter().try_for_each(|fs| write!(f, "{}", fs))
+  }
+}
+
+#[cfg(test)]
+mod tests{
+  use super::*;
+
+  #[test]
+  fn test_bool_to_finger_state() {
+    assert_eq!(FingerState::from(true), FingerState::Pressed);
+    assert_eq!(FingerState::from(false), FingerState::Released);
+  }
+
+  #[test]
+  fn test_int_to_finger_state() {
+    assert_eq!(FingerState::from(0), FingerState::Released);
+    assert_eq!(FingerState::from(1), FingerState::Pressed);
+    assert_eq!(FingerState::from(48492975), FingerState::Pressed);
+  }
+
+  #[test]
+  fn test_finger_state_to_int() {
+    assert_eq!(i32::from(FingerState::Pressed), 1);
+    assert_eq!(i32::from(FingerState::Released), 0);
+    let x: i32 = 1;
+    assert_eq!(x + i32::from(FingerState::Pressed), 2);
   }
 }
