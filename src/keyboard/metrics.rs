@@ -186,8 +186,9 @@ impl Metric for FingerBalance {
   }
 
   fn score(&self) -> f32 {
-    let total_presses = self.presses.iter().sum::<u32>() as f32;
-    let ratio = self.presses.map(|v| v as f32 / total_presses);
+    let total_presses =
+      (self.presses.iter().sum::<u32>() as usize + self.presses.len()) as f32;
+    let ratio = self.presses.map(|v| (v + 1) as f32 / total_presses);
     ratio
       .iter()
       .zip(self.target_ratio)
@@ -241,8 +242,9 @@ impl Metric for HandBalance {
   }
 
   fn score(&self) -> f32 {
-    let total_presses = self.presses.iter().sum::<u32>() as f32;
-    let ratio = self.presses.map(|v| v as f32 / total_presses);
+    let total_presses =
+      (self.presses.iter().sum::<u32>() as usize + self.presses.len()) as f32;
+    let ratio = self.presses.map(|v| (v + 1) as f32 / total_presses);
     ratio
       .iter()
       .zip(self.target_ratio)
@@ -362,27 +364,35 @@ mod tests {
 
   #[test]
   fn test_finger_balance() {
+    let fb = FingerBalance::new();
+    assert_eq!(fb.presses, [0; 10]);
+    assert_eq!(fb.score(), 0.0);
+
     let mut kb = TestKeyboard {};
     let text = "abcdefpqrs";
     let fb = FingerBalance::new().updated(&kb.type_text(text));
-    assert_eq!(fb.presses, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
+    assert_eq!(fb.presses, [1; 10]);
     assert_eq!(fb.score(), 0.0);
 
     let fb = FingerBalance::new_with_ratio([
       1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
     ])
     .updated(&kb.type_text(text));
-    assert_eq!(fb.presses, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
+    assert_eq!(fb.presses, [1; 10]);
     assert!(fb.score() - 1.6 < 1.0e-6);
 
     let fu = FingerUsage::new().updated(&kb.type_text(text));
     let fb = FingerBalance::from(fu);
-    assert_eq!(fb.presses, [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
+    assert_eq!(fb.presses, [1; 10]);
     assert_eq!(fb.score(), 0.0);
   }
 
   #[test]
   fn test_hand_balance() {
+    let hb = HandBalance::new();
+    assert_eq!(hb.presses, [0, 0]);
+    assert_eq!(hb.score(), 0.0);
+
     let mut kb = TestKeyboard {};
     let text = "abcdefpqrs";
     let hb = HandBalance::new().updated(&kb.type_text(text));
