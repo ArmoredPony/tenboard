@@ -92,27 +92,40 @@ impl HandsState {
   /// Returns iterator over unique two key `HandsState`s without left and
   /// right thumbs.
   pub fn iterate_two_key_no_thumbs() -> impl Iterator<Item = HandsState> {
-    Self::iterate_one_key_no_thumbs().flat_map(|hs| {
-      Self::iterate_one_key_no_thumbs().filter_map(move |other| {
-        if hs == other {
-          None
-        } else {
-          Some(hs.combine(&other))
-        }
-      })
+    (0..7).flat_map(|i| {
+      (i..8)
+        .filter_map(move |j| {
+          if i != j {
+            let mut a = [0; 8];
+            a[i] = 1;
+            a[j] = 1;
+            Some(a)
+          } else {
+            None
+          }
+        })
+        .map(|[a, b, c, d, e, f, g, h]| [a, b, c, d, 0, 0, e, f, g, h].into())
     })
   }
 
-  /// Returns iterator over two key `HandsState`s;
-  pub fn iterate_two_key() -> impl Iterator<Item = HandsState> {
-    (0..10).flat_map(|i| {
-      (i..10).map(move |j| {
-        let mut fs = [0; 10];
-        fs[i] = 1;
-        fs[j] = 1;
-        HandsState::from(fs)
-      })
-    })
+  /// Returns iterator over unique one and two keys `HandsState`s without left
+  /// and right thumbs.
+  pub fn iterate_one_two_key_no_thumbs() -> impl Iterator<Item = HandsState> {
+    Self::iterate_one_key_no_thumbs().chain(Self::iterate_two_key_no_thumbs())
+  }
+
+  /// Returns iterator over two key `HandsState`s with and wit left and
+  /// right thumbs.
+  pub fn iterate_one_two_key_with_thumbs() -> impl Iterator<Item = HandsState> {
+    Self::iterate_one_two_keys_no_thumbs()
+      .chain(
+        Self::iterate_one_two_keys_no_thumbs()
+          .map(|hs| hs.combine(&HandsState::left_thumb())),
+      )
+      .chain(
+        Self::iterate_one_two_keys_no_thumbs()
+          .map(|hs| hs.combine(&HandsState::right_thumb())),
+      )
   }
 
   /// Returns iterator over finger states for left then right hand.
