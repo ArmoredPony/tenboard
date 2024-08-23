@@ -53,7 +53,7 @@ impl Debug for dyn Tenboard {
 
 impl Display for dyn Tenboard {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-    todo!()
+    Debug::fmt(&self, f) // TODO: reimplement later
   }
 }
 
