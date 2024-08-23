@@ -1,4 +1,5 @@
 pub mod hands;
+pub mod layout;
 pub mod metrics;
 
 use std::fmt::Display;
@@ -22,10 +23,7 @@ pub trait Keyboard {
   ///
   /// Panics if any char in the sequence cannot be typed with this keyboard.
   /// To avoid panic, use [Keyboard::try_type_chars].
-  fn type_chars(
-    &mut self,
-    text: impl Iterator<Item = char>,
-  ) -> Vec<HandsState> {
+  fn type_chars(&mut self, text: impl Iterator<Item = char>) -> Vec<HandsState> {
     self.try_type_chars(text).unwrap_or_else(|e| panic!("{e}"))
   }
 }
