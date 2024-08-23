@@ -71,10 +71,12 @@ impl Display for FingerState {
 pub struct HandsState(pub [FingerState; 10]);
 
 impl HandsState {
+  #[inline]
   pub fn left_thumb() -> Self {
     [0, 0, 0, 0, 1, 0, 0, 0, 0, 0].into()
   }
 
+  #[inline]
   pub fn right_thumb() -> Self {
     [0, 0, 0, 0, 0, 1, 0, 0, 0, 0].into()
   }
@@ -82,7 +84,7 @@ impl HandsState {
   /// Returns iterator over unique one key `HandsState`s without left and
   /// right thumbs.
   pub fn iterate_one_key_no_thumbs() -> impl Iterator<Item = HandsState> {
-    (0..=4).chain(6..10).map(|i| {
+    (0..4).chain(6..10).map(|i| {
       let mut fs = [0; 10];
       fs[i] = 1;
       fs.into()
@@ -90,7 +92,8 @@ impl HandsState {
   }
 
   /// Returns iterator over unique two key `HandsState`s without left and
-  /// right thumbs.
+  /// right thumbs modifiers.
+  /// `HandsState`s with left and right thumbs pressed alone aren't inlcuded.
   pub fn iterate_two_key_no_thumbs() -> impl Iterator<Item = HandsState> {
     (0..7).flat_map(|i| {
       (i..8)
@@ -109,23 +112,33 @@ impl HandsState {
   }
 
   /// Returns iterator over unique one and two keys `HandsState`s without left
-  /// and right thumbs.
+  /// and right thumbs modifiers.
+  /// `HandsState`s with left and right thumbs pressed alone aren't inlcuded.
   pub fn iterate_one_two_key_no_thumbs() -> impl Iterator<Item = HandsState> {
     Self::iterate_one_key_no_thumbs().chain(Self::iterate_two_key_no_thumbs())
   }
 
-  /// Returns iterator over two key `HandsState`s with and wit left and
-  /// right thumbs.
+  /// Returns iterator over two key `HandsState`s with and without left and
+  /// right thumbs modifiers.
+  /// `HandsState`s with left and right thumbs pressed alone aren't inlcuded.
   pub fn iterate_one_two_key_with_thumbs() -> impl Iterator<Item = HandsState> {
-    Self::iterate_one_two_keys_no_thumbs()
+    Self::iterate_one_two_key_no_thumbs()
       .chain(
-        Self::iterate_one_two_keys_no_thumbs()
+        Self::iterate_one_two_key_no_thumbs()
           .map(|hs| hs.combine(&HandsState::left_thumb())),
       )
       .chain(
-        Self::iterate_one_two_keys_no_thumbs()
+        Self::iterate_one_two_key_no_thumbs()
           .map(|hs| hs.combine(&HandsState::right_thumb())),
       )
+  }
+
+  /// Returns iterator over one and two key `HandsState`s with and without
+  /// left and right thumbs modifiers.
+  /// `HandsState`s with left and right thumbs pressed alone are inlcuded.
+  pub fn iterate_one_two_key_all_states() -> impl Iterator<Item = HandsState> {
+    Self::iterate_one_two_key_with_thumbs()
+      .chain([HandsState::left_thumb(), HandsState::right_thumb()])
   }
 
   /// Returns iterator over finger states for left then right hand.
@@ -148,7 +161,7 @@ impl HandsState {
 
 impl From<[i32; 10]> for HandsState {
   fn from(value: [i32; 10]) -> Self {
-    HandsState(value.map(|i| FingerState::from(i)).try_into().unwrap())
+    HandsState(value.map(FingerState::from))
   }
 }
 
@@ -201,16 +214,6 @@ mod tests {
   }
 
   #[test]
-  fn test_iterate_inique_handsstates() {
-    let handsstates: Vec<_> = HandsState::iterate_two_key().collect();
-    assert_eq!(handsstates.len(), 55);
-    assert!(handsstates.iter().all(|hs| {
-      let s = hs.into_iter().filter(FingerState::is_pressed).count();
-      s == 1 || s == 2
-    }))
-  }
-
-  #[test]
   fn test_handsstate_combine() {
     let left_thumb: HandsState = [0, 0, 0, 0, 1, 0, 0, 0, 0, 0].into();
     let right_thumb: HandsState = [0, 0, 0, 0, 0, 1, 0, 0, 0, 0].into();
@@ -226,5 +229,91 @@ mod tests {
     let handstate = handstate.combine(&right_thumb);
     assert_eq!(handstate[4], FingerState::Pressed);
     assert_eq!(handstate[5], FingerState::Pressed);
+  }
+
+  #[test]
+  fn test_iterate_one_key_no_thumbs() {
+    let handstates: Vec<_> = HandsState::iterate_one_key_no_thumbs().collect();
+    assert_eq!(handstates.len(), 8);
+    assert_eq!(
+      handstates,
+      [
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0].into(),
+        [0, 1, 0, 0, 0, 0, 0, 0, 0, 0].into(),
+        [0, 0, 1, 0, 0, 0, 0, 0, 0, 0].into(),
+        [0, 0, 0, 1, 0, 0, 0, 0, 0, 0].into(),
+        [0, 0, 0, 0, 0, 0, 1, 0, 0, 0].into(),
+        [0, 0, 0, 0, 0, 0, 0, 1, 0, 0].into(),
+        [0, 0, 0, 0, 0, 0, 0, 0, 1, 0].into(),
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 1].into(),
+      ]
+    )
+  }
+
+  #[test]
+  fn test_iterate_two_key_no_thumbs() {
+    let handstates: Vec<_> = HandsState::iterate_two_key_no_thumbs().collect();
+    assert_eq!(handstates.len(), (1..=7).sum());
+    assert!(handstates.iter().all(
+      |hs| hs[4] == FingerState::Released && hs[5] == FingerState::Released
+    ));
+    assert!(
+      handstates.iter().all(|hs| hs
+        .iter()
+        .filter(|fs| fs.is_pressed())
+        .count()
+        == 2) //
+    );
+  }
+
+  #[test]
+  fn test_iterate_one_two_key_no_thumbs() {
+    let handstates: Vec<_> =
+      HandsState::iterate_one_two_key_no_thumbs().collect();
+    assert_eq!(handstates.len(), (1..=8).sum());
+    assert!(handstates.iter().all(
+      |hs| hs[4] == FingerState::Released && hs[5] == FingerState::Released
+    ));
+    assert!(handstates.iter().all(|hs| {
+      let c = hs.iter().filter(|fs| fs.is_pressed()).count();
+      c == 1 || c == 2
+    }));
+  }
+
+  #[test]
+  fn test_iterate_one_two_key_with_thumbs() {
+    let handstates: Vec<_> =
+      HandsState::iterate_one_two_key_with_thumbs().collect();
+    assert_eq!(handstates.len(), (1..=8).sum::<usize>() * 3);
+    assert!(handstates.iter().all(|hs| {
+      let c = hs.iter().filter(|fs| fs.is_pressed()).count();
+      c == 1 || c == 2 || c == 3
+    }));
+    assert!(handstates
+      .iter()
+      .filter(|hs| hs.iter().filter(|fs| fs.is_pressed()).count() == 1)
+      .all(
+        |hs| hs[4] == FingerState::Released && hs[5] == FingerState::Released
+      ));
+    assert!(handstates
+      .iter()
+      .filter(|hs| hs.iter().filter(|fs| fs.is_pressed()).count() == 2)
+      .all(
+        |hs| hs[4] == FingerState::Released || hs[5] == FingerState::Released
+      ));
+    assert!(handstates
+      .iter()
+      .filter(|hs| hs.iter().filter(|fs| fs.is_pressed()).count() == 3)
+      .all(
+        |hs| (hs[4] == FingerState::Pressed || hs[5] == FingerState::Pressed)
+          && !(hs[4] == FingerState::Pressed && hs[5] == FingerState::Pressed) //
+      ));
+  }
+
+  #[test]
+  fn test_iterate_one_two_key_all_states() {
+    let handstates: Vec<_> =
+      HandsState::iterate_one_two_key_all_states().collect();
+    assert_eq!(handstates.len(), (1..=8).sum::<usize>() * 3 + 2);
   }
 }
