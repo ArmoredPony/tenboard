@@ -6,14 +6,16 @@ use std::fmt::Display;
 
 use hands::HandsState;
 
-const LOWERCASE_CHARS: &str = "abcdefghijklmnopqrstuvwxyz";
-const UPPERCASE_CHARS: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-const PUNCTUATION_CHARS: &str =
-  "`1234567890-=[]\\;',./~!@#$%^&*()_+{}|:\"<>? \t\n";
-const TYPABLE_CHARS: &str = concat!(
+pub const LOWERCASE_CHARS: &str = "abcdefghijklmnopqrstuvwxyz";
+pub const UPPERCASE_CHARS: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+pub const DIGIT_CHARS: &str = "01234567890";
+pub const PUNCTUATION_CHARS: &str = "`-=[]\\;',./~!@#$%^&*()_+{}|:\"<>? \t\n";
+pub const TYPABLE_CHARS: &str = concat!(
   "abcdefghijklmnopqrstuvwxyz",
   "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-  "`1234567890-=[]\\;',./~!@#$%^&*()_+{}|:\"<>? \t\n"
+  "`1234567890-=[]\\;',./",
+  "~!@#$%^&*()_+{}|:\"<>?",
+  " \t\n"
 );
 
 /// Represents a generic keyboard.
