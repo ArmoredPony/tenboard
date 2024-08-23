@@ -39,7 +39,7 @@ impl FingerUsage {
 impl Metric for FingerUsage {
   fn update_once(&mut self, handstate: &HandsState) {
     for (fc, fs) in self.presses.iter_mut().zip(handstate.iter()) {
-      *fc += *fs as u32;
+      *fc += u32::from(*fs);
     }
   }
 
@@ -65,7 +65,7 @@ impl HandUsage {
 impl Metric for HandUsage {
   fn update_once(&mut self, handstate: &HandsState) {
     for (hc, hs) in self.presses.iter_mut().zip(handstate.chunks(2)) {
-      *hc += hs.iter().map(|fs| *fs as u32).sum::<u32>();
+      *hc += hs.iter().map(|fs| u32::from(*fs)).sum::<u32>();
     }
   }
 
@@ -185,7 +185,7 @@ impl FingerBalance {
 impl Metric for FingerBalance{
   fn update_once(&mut self, handstate: &HandsState) {
     for (fc, fs) in self.presses.iter_mut().zip(handstate.iter()) {
-      *fc += *fs as u32;
+      *fc += u32::from(*fs);
     }
   }
 
@@ -236,7 +236,7 @@ impl HandBalance {
 impl Metric for HandBalance{
   fn update_once(&mut self, handstate: &HandsState) {
     for (fc, fs) in self.presses.iter_mut().zip(handstate.iter()) {
-      *fc += *fs as u32;
+      *fc += u32::from(*fs);
     }
   }
 
