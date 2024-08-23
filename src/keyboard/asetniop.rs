@@ -4,9 +4,10 @@ use std::collections::HashMap;
 
 use lazy_static::lazy_static;
 
-use crate::{
+use super::{
   hands::{FingerState, HandsState},
-  keyboard::{Keyboard, NoSuchChar},
+  Keyboard,
+  NoSuchChar,
 };
 
 const SWITCH_COMBINATION: HandsState = HandsState([

@@ -1,4 +1,6 @@
-use crate::hands::{FingerState, HandsState};
+//! Contains metrics that define efficency of a keyboard.
+
+use super::hands::{FingerState, HandsState};
 
 /// Describes metric used to measure keyboard layout efficiency.
 pub trait Metric: Sized {

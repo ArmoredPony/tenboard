@@ -1,8 +1,10 @@
+pub mod asetniop;
+pub mod hands;
 pub mod metrics;
 
 use std::fmt::Display;
 
-use crate::hands::HandsState;
+use hands::HandsState;
 
 /// Represents a generic keyboard.
 pub trait Keyboard {
@@ -42,7 +44,6 @@ impl Display for NoSuchChar {
 #[cfg(test)]
 mod tests {
   use super::*;
-  use crate::hands::HandsState;
 
   struct TestKeyboard {}
 
