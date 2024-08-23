@@ -148,3 +148,36 @@ impl Tenboard for TenboardModifierConstrained {
     .ok_or(NoSuchChar { ch })
   }
 }
+
+#[cfg(test)]
+mod tests {
+  use std::collections::HashSet;
+
+  use super::*;
+
+  #[test]
+  fn test_random_type_all_chars() -> Result<(), NoSuchChar> {
+    let mut tb = TenboardUnconstrained::new_random();
+    let hs_set: HashSet<HandsState> = TYPABLE_CHARS
+      .chars()
+      .map(|ch| tb.try_type_char(ch))
+      .collect::<Result<_, _>>()?;
+    assert_eq!(hs_set.len(), TYPABLE_CHARS.len());
+
+    let mut tb = TenboardThumbConstrained::new_random();
+    let hs_set: HashSet<HandsState> = TYPABLE_CHARS
+      .chars()
+      .map(|ch| tb.try_type_char(ch))
+      .collect::<Result<_, _>>()?;
+    assert_eq!(hs_set.len(), TYPABLE_CHARS.len());
+
+    let mut tb = TenboardModifierConstrained::new_random();
+    let hs_set: HashSet<HandsState> = TYPABLE_CHARS
+      .chars()
+      .map(|ch| tb.try_type_char(ch))
+      .collect::<Result<_, _>>()?;
+    assert_eq!(hs_set.len(), TYPABLE_CHARS.len());
+
+    Ok(())
+  }
+}
