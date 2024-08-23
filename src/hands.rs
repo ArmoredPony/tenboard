@@ -3,7 +3,8 @@
 
 use std::{
   fmt::Display,
-  ops::{Deref, DerefMut}, slice::Chunks,
+  ops::{Deref, DerefMut},
+  slice::Chunks,
 };
 
 /// Represents a finger state. Can be either pressed or released.
@@ -103,7 +104,7 @@ impl Display for HandsState {
 }
 
 #[cfg(test)]
-mod tests{
+mod tests {
   use super::*;
 
   #[test]
