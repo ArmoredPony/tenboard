@@ -18,52 +18,62 @@ pub trait Metric {
 
 /// Measures finger usage.
 #[derive(Debug, Default)]
-pub struct FingerUsage([u32; 10]);
+pub struct FingerUsage {
+  presses: [u32; 10]
+}
 
 impl FingerUsage {
   pub fn new() -> Self {
-    Self([0; 10])
+    Self {
+      presses: [0; 10]
+    }
   }
 }
 
 impl Metric for FingerUsage {
   fn update_once(&mut self, handstate: &HandsState) {
-    for (fc, fs) in self.0.iter_mut().zip(handstate.iter()) {
+    for (fc, fs) in self.presses.iter_mut().zip(handstate.iter()) {
       *fc += *fs as u32;
     }
   }
 
   fn score(&self) -> f32 {
-    self.0.map(|v| v as f32).iter().sum()
+    self.presses.map(|v| v as f32).iter().sum()
   }
 }
 
 /// Measures hand usage.
 #[derive(Debug, Default)]
-pub struct HandUsage([u32; 2]);
+pub struct HandUsage {
+  presses: [u32; 2]
+}
 
 impl HandUsage {
   pub fn new() -> Self {
-    Self([0; 2])
+    Self {
+      presses: [0; 2]
+    }
   }
 }
 
 impl Metric for HandUsage {
   fn update_once(&mut self, handstate: &HandsState) {
-    for (hc, hs) in self.0.iter_mut().zip(handstate.chunks(2)) {
+    for (hc, hs) in self.presses.iter_mut().zip(handstate.chunks(2)) {
       *hc += hs.iter().map(|fs| *fs as u32).sum::<u32>();
     }
   }
 
   fn score(&self) -> f32 {
-    self.0.map(|v| v as f32).iter().sum()
+    self.presses.map(|v| v as f32).iter().sum()
   }
 }
 
 impl From<FingerUsage> for HandUsage {
   fn from(value: FingerUsage) -> Self {
-    let (lh, rh) = value.0.split_at(5);
-    Self([lh.iter().sum(), rh.iter().sum()])
+    let (lh, rh) = value.presses.split_at(5);
+    Self {
+      presses: [lh.iter().sum(), rh.iter().sum()]
+    }
   }
 }
 
@@ -183,7 +193,7 @@ impl Metric for FingerBalance{
 impl From<FingerUsage> for FingerBalance {
   fn from(value: FingerUsage) -> Self {
     Self {
-      presses: value.0,
+      presses: value.presses,
       target_ratio: [0.0; 10]
     }
   }
