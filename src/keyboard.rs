@@ -46,6 +46,17 @@ mod tests {
 
   struct TestKeyboard {}
 
+  impl TestKeyboard {
+    fn try_type_char(&mut self, ch: char) -> Result<HandsState, NoSuchChar> {
+      match ch {
+        'a' => Ok([1, 0, 0, 0, 0, 0, 0, 0, 0, 0].into()),
+        'b' => Ok([0, 1, 0, 0, 0, 0, 0, 0, 0, 0].into()),
+        'c' => Ok([0, 0, 1, 0, 0, 0, 0, 0, 0, 0].into()),
+        _ => Err(NoSuchChar { ch }),
+      }
+    }
+  }
+
   impl Keyboard for TestKeyboard {
     fn try_type_text(
       &mut self,
@@ -53,12 +64,7 @@ mod tests {
     ) -> Result<Vec<HandsState>, NoSuchChar> {
       text
         .chars()
-        .map(|ch| match ch {
-          'a' => Ok([1, 0, 0, 0, 0, 0, 0, 0, 0, 0].into()),
-          'b' => Ok([0, 1, 0, 0, 0, 0, 0, 0, 0, 0].into()),
-          'c' => Ok([0, 0, 1, 0, 0, 0, 0, 0, 0, 0].into()),
-          _ => Err(NoSuchChar { ch }),
-        })
+        .map(|ch| self.try_type_char(ch))
         .collect()
     }
   }
