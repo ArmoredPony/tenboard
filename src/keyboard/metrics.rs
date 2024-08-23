@@ -25,7 +25,7 @@ pub trait Metric: Sized {
 }
 
 /// Measures finger usage.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct FingerUsage {
   presses: [u32; 10],
 }
@@ -33,6 +33,12 @@ pub struct FingerUsage {
 impl FingerUsage {
   pub fn new() -> Self {
     Self { presses: [0; 10] }
+  }
+}
+
+impl Default for FingerUsage {
+  fn default() -> Self {
+    Self::new()
   }
 }
 
@@ -49,7 +55,7 @@ impl Metric for FingerUsage {
 }
 
 /// Measures hand usage.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct HandUsage {
   presses: [u32; 2],
 }
@@ -57,6 +63,12 @@ pub struct HandUsage {
 impl HandUsage {
   pub fn new() -> Self {
     Self { presses: [0; 2] }
+  }
+}
+
+impl Default for HandUsage {
+  fn default() -> Self {
+    Self::new()
   }
 }
 
@@ -82,7 +94,7 @@ impl From<FingerUsage> for HandUsage {
 }
 
 /// Measures finger alternation.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct FingerAlternation {
   last_handstate: HandsState,
   consecutive_presses: [u32; 10],
@@ -94,6 +106,12 @@ impl FingerAlternation {
       last_handstate: [0; 10].into(),
       consecutive_presses: [0; 10],
     }
+  }
+}
+
+impl Default for FingerAlternation {
+  fn default() -> Self {
+    Self::new()
   }
 }
 
@@ -117,7 +135,7 @@ impl Metric for FingerAlternation {
 }
 
 /// Measures hand alternation.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct HandAlternation {
   last_hands_used: [bool; 2],
   consecutive_presses: [u32; 2],
@@ -129,6 +147,12 @@ impl HandAlternation {
       last_hands_used: [false; 2],
       consecutive_presses: [0; 2],
     }
+  }
+}
+
+impl Default for HandAlternation {
+  fn default() -> Self {
+    Self::new()
   }
 }
 
@@ -153,7 +177,7 @@ impl Metric for HandAlternation {
 }
 
 /// Measures finger usage balance. Compares it to target balance ratio.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct FingerBalance {
   presses: [u32; 10],
   target_ratio: [f32; 10],
@@ -177,6 +201,12 @@ impl FingerBalance {
     let mut fb = Self::new();
     fb.set_ratio(target_ratio);
     fb
+  }
+}
+
+impl Default for FingerBalance {
+  fn default() -> Self {
+    Self::new()
   }
 }
 
@@ -209,7 +239,7 @@ impl From<FingerUsage> for FingerBalance {
 }
 
 /// Measures hand usage balance. Compares it to target balance ratio.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct HandBalance {
   presses: [u32; 2],
   target_ratio: [f32; 2],
@@ -233,6 +263,12 @@ impl HandBalance {
     let mut fb = Self::new();
     fb.set_ratio(target_ratio);
     fb
+  }
+}
+
+impl Default for HandBalance {
+  fn default() -> Self {
+    Self::new()
   }
 }
 
@@ -305,11 +341,11 @@ mod tests {
   }
 
   impl Keyboard for TestKeyboard {
-    fn try_type_text(
+    fn try_type_chars(
       &mut self,
-      text: &str,
+      chars: impl Iterator<Item = char>,
     ) -> Result<Vec<HandsState>, NoSuchChar> {
-      text.chars().map(|ch| self.try_type_char(ch)).collect()
+      chars.map(|ch| self.try_type_char(ch)).collect()
     }
   }
 
@@ -317,7 +353,7 @@ mod tests {
   fn test_finger_usage() {
     let mut kb = TestKeyboard {};
     let text = "abcdefadab";
-    let fu = FingerUsage::new().updated(&kb.type_text(text));
+    let fu = FingerUsage::new().updated(&kb.type_chars(text.chars()));
     assert_eq!(fu.presses, [3, 2, 1, 0, 0, 0, 0, 2, 1, 1]);
     assert_eq!(fu.score(), 10.0);
   }
@@ -326,11 +362,11 @@ mod tests {
   fn test_hand_usage() {
     let mut kb = TestKeyboard {};
     let text = "abcdefadab";
-    let hu = HandUsage::new().updated(&kb.type_text(text));
+    let hu = HandUsage::new().updated(&kb.type_chars(text.chars()));
     assert_eq!(hu.presses, [6, 4]);
     assert_eq!(hu.score(), 10.0);
 
-    let fu = FingerUsage::new().updated(&kb.type_text(text));
+    let fu = FingerUsage::new().updated(&kb.type_chars(text.chars()));
     let hu = HandUsage::from(fu);
     assert_eq!(hu.presses, [6, 4]);
     assert_eq!(hu.score(), 10.0);
@@ -340,12 +376,12 @@ mod tests {
   fn test_finger_alternation() {
     let mut kb = TestKeyboard {};
     let text = "abcdef";
-    let fa = FingerAlternation::new().updated(&kb.type_text(text));
+    let fa = FingerAlternation::new().updated(&kb.type_chars(text.chars()));
     assert_eq!(fa.consecutive_presses, [0; 10]);
     assert_eq!(fa.score(), 0.0);
 
     let text = "aacffeddaaaaba";
-    let fa = FingerAlternation::new().updated(&kb.type_text(text));
+    let fa = FingerAlternation::new().updated(&kb.type_chars(text.chars()));
     assert_eq!(fa.consecutive_presses, [4, 0, 0, 0, 0, 0, 0, 1, 0, 1]);
     assert_eq!(fa.score(), 6.0);
   }
@@ -354,12 +390,12 @@ mod tests {
   fn test_hand_alternation() {
     let mut kb = TestKeyboard {};
     let text = "adbecf";
-    let ha = HandAlternation::new().updated(&kb.type_text(text));
+    let ha = HandAlternation::new().updated(&kb.type_chars(text.chars()));
     assert_eq!(ha.consecutive_presses, [0; 2]);
     assert_eq!(ha.score(), 0.0);
 
     let text = "abcadefafef";
-    let ha = HandAlternation::new().updated(&kb.type_text(text));
+    let ha = HandAlternation::new().updated(&kb.type_chars(text.chars()));
     assert_eq!(ha.consecutive_presses, [3, 4]);
     assert_eq!(ha.score(), 7.0);
   }
@@ -372,18 +408,18 @@ mod tests {
 
     let mut kb = TestKeyboard {};
     let text = "abcdefpqrs";
-    let fb = FingerBalance::new().updated(&kb.type_text(text));
+    let fb = FingerBalance::new().updated(&kb.type_chars(text.chars()));
     assert_eq!(fb.presses, [1; 10]);
     assert_eq!(fb.score(), 0.0);
 
     let fb = FingerBalance::new_with_ratio([
       1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
     ])
-    .updated(&kb.type_text(text));
+    .updated(&kb.type_chars(text.chars()));
     assert_eq!(fb.presses, [1; 10]);
     assert!(fb.score() - 1.6 < 1.0e-6);
 
-    let fu = FingerUsage::new().updated(&kb.type_text(text));
+    let fu = FingerUsage::new().updated(&kb.type_chars(text.chars()));
     let fb = FingerBalance::from(fu);
     assert_eq!(fb.presses, [1; 10]);
     assert_eq!(fb.score(), 0.0);
@@ -397,21 +433,21 @@ mod tests {
 
     let mut kb = TestKeyboard {};
     let text = "abcdefpqrs";
-    let hb = HandBalance::new().updated(&kb.type_text(text));
+    let hb = HandBalance::new().updated(&kb.type_chars(text.chars()));
     assert_eq!(hb.presses, [5, 5]);
     assert_eq!(hb.score(), 0.0);
 
     let hb = HandBalance::new_with_ratio([3.0, 7.0]) //
-      .updated(&kb.type_text(text));
+      .updated(&kb.type_chars(text.chars()));
     assert_eq!(hb.presses, [5, 5]);
     assert!(hb.score() - 0.4 < 1.0e-6);
 
-    let hu = HandUsage::new().updated(&kb.type_text(text));
+    let hu = HandUsage::new().updated(&kb.type_chars(text.chars()));
     let hb = HandBalance::from(hu);
     assert_eq!(hb.presses, [5, 5]);
     assert_eq!(hb.score(), 0.0);
 
-    let fb = FingerBalance::new().updated(&kb.type_text(text));
+    let fb = FingerBalance::new().updated(&kb.type_chars(text.chars()));
     let hb = HandBalance::from(fb);
     assert_eq!(hb.presses, [5, 5]);
     assert_eq!(hb.score(), 0.0);

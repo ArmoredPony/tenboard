@@ -1,4 +1,3 @@
-pub mod asetniop;
 pub mod hands;
 pub mod metrics;
 
@@ -9,23 +8,26 @@ use hands::HandsState;
 /// Represents a generic keyboard.
 pub trait Keyboard {
   /// Returns a sequence of hand states that describe necessary finger presses
-  /// for that text to be typed or an error if that char can't be typed with
-  /// this keyboard.
-  fn try_type_text(
+  /// for given char sequence to be typed or an error if a char can't be
+  /// typed with this keyboard.
+  fn try_type_chars(
     &mut self,
-    text: &str,
+    chars: impl Iterator<Item = char>,
   ) -> Result<Vec<HandsState>, NoSuchChar>;
 
-  /// Emulates typing a text with such keyboard.
+  /// Emulates typing a char sequence with the keyboard.
   /// Returns a sequence of hand states that describe necessary finger presses
-  /// for that text to be typed.
+  /// for that char sequence to be typed.
   ///
   /// # Panics
   ///
-  /// Panics if any char in the text cannot be typed with this keyboard.
-  /// To avoid panic, use [Keyboard::try_type_text].
-  fn type_text(&mut self, text: &str) -> Vec<HandsState> {
-    self.try_type_text(text).unwrap_or_else(|e| panic!("{e}"))
+  /// Panics if any char in the sequence cannot be typed with this keyboard.
+  /// To avoid panic, use [Keyboard::try_type_chars].
+  fn type_chars(
+    &mut self,
+    text: impl Iterator<Item = char>,
+  ) -> Vec<HandsState> {
+    self.try_type_chars(text).unwrap_or_else(|e| panic!("{e}"))
   }
 }
 
@@ -59,11 +61,11 @@ mod tests {
   }
 
   impl Keyboard for TestKeyboard {
-    fn try_type_text(
+    fn try_type_chars(
       &mut self,
-      text: &str,
+      chars: impl Iterator<Item = char>,
     ) -> Result<Vec<HandsState>, NoSuchChar> {
-      text.chars().map(|ch| self.try_type_char(ch)).collect()
+      chars.map(|ch| self.try_type_char(ch)).collect()
     }
   }
 
@@ -71,7 +73,7 @@ mod tests {
   fn test_typing() {
     let mut tk = TestKeyboard {};
     let text = "cabcab";
-    assert_eq!(tk.type_text(text), vec![
+    assert_eq!(tk.type_chars(text.chars()), vec![
       [0, 0, 1, 0, 0, 0, 0, 0, 0, 0].into(),
       [1, 0, 0, 0, 0, 0, 0, 0, 0, 0].into(),
       [0, 1, 0, 0, 0, 0, 0, 0, 0, 0].into(),
@@ -85,7 +87,7 @@ mod tests {
   fn test_char_not_found() {
     let mut tk = TestKeyboard {};
     let text = "abcX";
-    assert_eq!(tk.try_type_text(text), Err(NoSuchChar { ch: 'X' }));
+    assert_eq!(tk.try_type_chars(text.chars()), Err(NoSuchChar { ch: 'X' }));
   }
 
   #[test]
@@ -93,6 +95,6 @@ mod tests {
   fn test_char_not_found_panic() {
     let mut tk = TestKeyboard {};
     let text = "abcX";
-    tk.type_text(text);
+    tk.type_chars(text.chars());
   }
 }
