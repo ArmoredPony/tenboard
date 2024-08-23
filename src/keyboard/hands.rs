@@ -88,6 +88,18 @@ impl HandsState {
   pub fn hand_iter(&self) -> Chunks<FingerState> {
     self.0.chunks(5)
   }
+
+  /// Creates a new `HandsState` where fingers from `self` and `other` are in
+  /// `Pressed` state.
+  pub fn combine(&self, other: &Self) -> Self {
+    let mut handstate = self.to_owned();
+    handstate.iter_mut().zip(other.iter()).for_each(|(s, o)| {
+      if o == &FingerState::Pressed {
+        *s = FingerState::Pressed;
+      }
+    });
+    handstate
+  }
 }
 
 impl From<[i32; 10]> for HandsState {
@@ -159,5 +171,23 @@ mod tests {
       let s = hs.into_iter().filter(FingerState::is_pressed).count();
       s == 1 || s == 2
     }))
+  }
+
+  #[test]
+  fn test_handsstate_combine() {
+    let left_thumb: HandsState = [0, 0, 0, 0, 1, 0, 0, 0, 0, 0].into();
+    let right_thumb: HandsState = [0, 0, 0, 0, 0, 1, 0, 0, 0, 0].into();
+    let handstate: HandsState = [1, 0, 1, 0, 1, 0, 1, 0, 1, 0].into();
+
+    assert_eq!(handstate[4], FingerState::Pressed);
+    assert_eq!(handstate[5], FingerState::Released);
+
+    let handstate = handstate.combine(&left_thumb);
+    assert_eq!(handstate[4], FingerState::Pressed);
+    assert_eq!(handstate[5], FingerState::Released);
+
+    let handstate = handstate.combine(&right_thumb);
+    assert_eq!(handstate[4], FingerState::Pressed);
+    assert_eq!(handstate[5], FingerState::Pressed);
   }
 }
