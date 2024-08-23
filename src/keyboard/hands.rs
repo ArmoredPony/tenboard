@@ -104,14 +104,7 @@ impl HandsState {
 
 impl From<[i32; 10]> for HandsState {
   fn from(value: [i32; 10]) -> Self {
-    HandsState(
-      value
-        .iter()
-        .map(|i| FingerState::from(*i))
-        .collect::<Vec<_>>()
-        .try_into()
-        .unwrap(),
-    )
+    HandsState(value.map(|i| FingerState::from(i)).try_into().unwrap())
   }
 }
 

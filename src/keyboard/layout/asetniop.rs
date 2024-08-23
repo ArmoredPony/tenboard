@@ -6,8 +6,7 @@ use lazy_static::lazy_static;
 
 use crate::keyboard::{
   hands::{FingerState, HandsState},
-  Keyboard,
-  NoSuchChar,
+  Keyboard, NoSuchChar,
 };
 
 const SWITCH_COMBINATION: HandsState = HandsState([

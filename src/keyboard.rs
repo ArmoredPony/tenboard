@@ -10,7 +10,7 @@ const LOWERCASE_CHARS: &str = "abcdefghijklmnopqrstuvwxyz";
 const UPPERCASE_CHARS: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const PUNCTUATION_CHARS: &str =
   "`1234567890-=[]\\;',./~!@#$%^&*()_+{}|:\"<>? \t\n";
-const TYPABLE_SYMBOLS: &str = concat!(
+const TYPABLE_CHARS: &str = concat!(
   "abcdefghijklmnopqrstuvwxyz",
   "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
   "`1234567890-=[]\\;',./~!@#$%^&*()_+{}|:\"<>? \t\n"
@@ -33,7 +33,10 @@ pub trait Keyboard {
   ///
   /// Panics if any char in the sequence cannot be typed with this keyboard.
   /// To avoid panic, use [Keyboard::try_type_chars].
-  fn type_chars(&mut self, text: impl Iterator<Item = char>) -> Vec<HandsState> {
+  fn type_chars(
+    &mut self,
+    text: impl Iterator<Item = char>,
+  ) -> Vec<HandsState> {
     self.try_type_chars(text).unwrap_or_else(|e| panic!("{e}"))
   }
 }
