@@ -1,6 +1,6 @@
 pub mod hands;
 pub mod layout;
-pub mod metrics;
+pub mod metric;
 
 use std::fmt::Display;
 
