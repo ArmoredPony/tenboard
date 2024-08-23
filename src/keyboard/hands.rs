@@ -8,7 +8,7 @@ use std::{
 };
 
 /// Represents a finger state. Can be either pressed or released.
-#[derive(Default, Debug, Eq, PartialEq, Clone, Copy)]
+#[derive(Default, Debug, Eq, PartialEq, Clone, Copy, Hash)]
 pub enum FingerState {
   Pressed,
   #[default]
@@ -67,7 +67,7 @@ impl Display for FingerState {
 /// | | | | |_  _|       |
 /// |        /  \        |
 /// </pre>
-#[derive(Default, Debug, Eq, PartialEq, Clone, Copy)]
+#[derive(Default, Debug, Eq, PartialEq, Clone, Copy, Hash)]
 pub struct HandsState(pub [FingerState; 10]);
 
 impl HandsState {
