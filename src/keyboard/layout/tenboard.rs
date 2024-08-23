@@ -1,6 +1,6 @@
 //! Describes Tenboard keyboard layout.
 
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Debug, fmt::Display};
 
 use rand::prelude::*;
 
@@ -9,25 +9,17 @@ use crate::keyboard::{
   PUNCTUATION_CHARS, TYPABLE_CHARS,
 };
 
-pub trait Tenboard: Keyboard {
+pub trait Tenboard {
   /// Creates a new Tenboard keyboard layout where each character
   /// corresponds to a random `HandsState` with one or two keys pressed.
-  fn new_random() -> Self;
+  fn new_random() -> Self
+  where
+    Self: Sized;
 
   /// Returns a hand state that describes necessary finger combination
   /// for given char to be typed. If for some char no combination was found,
   /// returns an error.
-  fn try_type_char(&mut self, ch: char) -> Result<HandsState, NoSuchChar>;
-
-  /// Returns a sequence of hand states that describe necessary finger presses
-  /// for given char sequence to be typed. If for some char no combination was
-  /// found, this char is silently skipped.
-  fn type_chars_skip(
-    &mut self,
-    chars: impl Iterator<Item = char>,
-  ) -> Vec<HandsState> {
-    chars.filter_map(|ch| self.try_type_char(ch).ok()).collect()
-  }
+  fn try_type_char(&self, ch: char) -> Result<HandsState, NoSuchChar>;
 }
 
 impl<T: Tenboard> Keyboard for T {
@@ -36,6 +28,32 @@ impl<T: Tenboard> Keyboard for T {
     chars: impl Iterator<Item = char>,
   ) -> Result<Vec<HandsState>, NoSuchChar> {
     chars.map(|ch| self.try_type_char(ch)).collect()
+  }
+}
+
+impl Debug for dyn Tenboard {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    TYPABLE_CHARS.chars().try_for_each(|ch| {
+      let hs = self.try_type_char(ch);
+      let ch = match ch {
+        '\n' => '⤶',
+        '\t' => '⇆',
+        ' ' => '⎵',
+        _ => ch,
+      };
+      write!(f, "{ch}\t")?;
+      match hs {
+        Ok(hs) => write!(f, "{hs}")?,
+        Err(_) => write!(f, "no match!")?,
+      }
+      writeln!(f)
+    })
+  }
+}
+
+impl Display for dyn Tenboard {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    todo!()
   }
 }
 
@@ -54,7 +72,7 @@ impl Tenboard for TenboardUnconstrained {
     }
   }
 
-  fn try_type_char(&mut self, ch: char) -> Result<HandsState, NoSuchChar> {
+  fn try_type_char(&self, ch: char) -> Result<HandsState, NoSuchChar> {
     self.layout.get(&ch).copied().ok_or(NoSuchChar { ch })
   }
 }
@@ -77,7 +95,7 @@ impl Tenboard for TenboardThumbConstrained {
     }
   }
 
-  fn try_type_char(&mut self, ch: char) -> Result<HandsState, NoSuchChar> {
+  fn try_type_char(&self, ch: char) -> Result<HandsState, NoSuchChar> {
     match ch {
       ' ' => Ok(HandsState::left_thumb()),
       '\n' => Ok(HandsState::right_thumb()),
@@ -132,7 +150,7 @@ impl Tenboard for TenboardModifierConstrained {
     }
   }
 
-  fn try_type_char(&mut self, ch: char) -> Result<HandsState, NoSuchChar> {
+  fn try_type_char(&self, ch: char) -> Result<HandsState, NoSuchChar> {
     match ch {
       ' ' => Some(self.whitespace_hs),
       '\n' => Some(self.newline_hs),
@@ -157,21 +175,21 @@ mod tests {
 
   #[test]
   fn test_random_type_all_chars() -> Result<(), NoSuchChar> {
-    let mut tb = TenboardUnconstrained::new_random();
+    let tb = TenboardUnconstrained::new_random();
     let hs_set: HashSet<HandsState> = TYPABLE_CHARS
       .chars()
       .map(|ch| tb.try_type_char(ch))
       .collect::<Result<_, _>>()?;
     assert_eq!(hs_set.len(), TYPABLE_CHARS.len());
 
-    let mut tb = TenboardThumbConstrained::new_random();
+    let tb = TenboardThumbConstrained::new_random();
     let hs_set: HashSet<HandsState> = TYPABLE_CHARS
       .chars()
       .map(|ch| tb.try_type_char(ch))
       .collect::<Result<_, _>>()?;
     assert_eq!(hs_set.len(), TYPABLE_CHARS.len());
 
-    let mut tb = TenboardModifierConstrained::new_random();
+    let tb = TenboardModifierConstrained::new_random();
     let hs_set: HashSet<HandsState> = TYPABLE_CHARS
       .chars()
       .map(|ch| tb.try_type_char(ch))
