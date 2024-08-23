@@ -71,9 +71,40 @@ impl Display for FingerState {
 pub struct HandsState(pub [FingerState; 10]);
 
 impl HandsState {
-  /// Returns iterator producing unique `HandsState` objects with one or two
-  /// fingers pressed.
-  pub fn iterate_unique() -> impl Iterator<Item = HandsState> {
+  pub fn left_thumb() -> Self {
+    [0, 0, 0, 0, 1, 0, 0, 0, 0, 0].into()
+  }
+
+  pub fn right_thumb() -> Self {
+    [0, 0, 0, 0, 0, 1, 0, 0, 0, 0].into()
+  }
+
+  /// Returns iterator over unique one key `HandsState`s without left and
+  /// right thumbs.
+  pub fn iterate_one_key_no_thumbs() -> impl Iterator<Item = HandsState> {
+    (0..=4).chain(6..10).map(|i| {
+      let mut fs = [0; 10];
+      fs[i] = 1;
+      fs.into()
+    })
+  }
+
+  /// Returns iterator over unique two key `HandsState`s without left and
+  /// right thumbs.
+  pub fn iterate_two_key_no_thumbs() -> impl Iterator<Item = HandsState> {
+    Self::iterate_one_key_no_thumbs().flat_map(|hs| {
+      Self::iterate_one_key_no_thumbs().filter_map(move |other| {
+        if hs == other {
+          None
+        } else {
+          Some(hs.combine(&other))
+        }
+      })
+    })
+  }
+
+  /// Returns iterator over two key `HandsState`s;
+  pub fn iterate_two_key() -> impl Iterator<Item = HandsState> {
     (0..10).flat_map(|i| {
       (i..10).map(move |j| {
         let mut fs = [0; 10];
@@ -158,7 +189,7 @@ mod tests {
 
   #[test]
   fn test_iterate_inique_handsstates() {
-    let handsstates: Vec<_> = HandsState::iterate_unique().collect();
+    let handsstates: Vec<_> = HandsState::iterate_two_key().collect();
     assert_eq!(handsstates.len(), 55);
     assert!(handsstates.iter().all(|hs| {
       let s = hs.into_iter().filter(FingerState::is_pressed).count();
