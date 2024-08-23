@@ -6,6 +6,16 @@ use std::fmt::Display;
 
 use hands::HandsState;
 
+const LOWERCASE_CHARS: &str = "abcdefghijklmnopqrstuvwxyz";
+const UPPERCASE_CHARS: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const PUNCTUATION_CHARS: &str =
+  "`1234567890-=[]\\;',./~!@#$%^&*()_+{}|:\"<>? \t\n";
+const TYPABLE_SYMBOLS: &str = concat!(
+  "abcdefghijklmnopqrstuvwxyz",
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+  "`1234567890-=[]\\;',./~!@#$%^&*()_+{}|:\"<>? \t\n"
+);
+
 /// Represents a generic keyboard.
 pub trait Keyboard {
   /// Returns a sequence of hand states that describe necessary finger presses
@@ -70,14 +80,17 @@ mod tests {
   fn test_typing() {
     let mut tk = TestKeyboard {};
     let text = "cabcab";
-    assert_eq!(tk.type_chars(text.chars()), vec![
-      [0, 0, 1, 0, 0, 0, 0, 0, 0, 0].into(),
-      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0].into(),
-      [0, 1, 0, 0, 0, 0, 0, 0, 0, 0].into(),
-      [0, 0, 1, 0, 0, 0, 0, 0, 0, 0].into(),
-      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0].into(),
-      [0, 1, 0, 0, 0, 0, 0, 0, 0, 0].into(),
-    ]);
+    assert_eq!(
+      tk.type_chars(text.chars()),
+      vec![
+        [0, 0, 1, 0, 0, 0, 0, 0, 0, 0].into(),
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0].into(),
+        [0, 1, 0, 0, 0, 0, 0, 0, 0, 0].into(),
+        [0, 0, 1, 0, 0, 0, 0, 0, 0, 0].into(),
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0].into(),
+        [0, 1, 0, 0, 0, 0, 0, 0, 0, 0].into(),
+      ]
+    );
   }
 
   #[test]
