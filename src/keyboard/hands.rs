@@ -7,12 +7,26 @@ use std::{
   slice::Chunks,
 };
 
+use serde::{Deserialize, Serialize};
+use serde_repr::{Deserialize_repr, Serialize_repr};
+
 /// Represents a finger state. Can be either pressed or released.
-#[derive(Default, Debug, Eq, PartialEq, Clone, Copy, Hash)]
+#[derive(
+  Default,
+  Debug,
+  Eq,
+  PartialEq,
+  Clone,
+  Copy,
+  Hash,
+  Serialize_repr,
+  Deserialize_repr,
+)]
+#[repr(u8)]
 pub enum FingerState {
-  Pressed,
+  Pressed = 0,
   #[default]
-  Released,
+  Released = 1,
 }
 
 impl FingerState {
@@ -67,7 +81,9 @@ impl Display for FingerState {
 /// | | | | |_  _|       |
 /// |        /  \        |
 /// </pre>
-#[derive(Default, Debug, Eq, PartialEq, Clone, Copy, Hash)]
+#[derive(
+  Default, Debug, Eq, PartialEq, Clone, Copy, Hash, Serialize, Deserialize,
+)]
 pub struct HandsState(pub [FingerState; 10]);
 
 impl HandsState {
@@ -157,6 +173,14 @@ impl HandsState {
     });
     handstate
   }
+
+  /// Returns number of pressed fingers in `HandsState`.
+  pub fn count_pressed(&self) -> usize {
+    self
+      .iter()
+      .filter(|&&fs| fs == FingerState::Pressed)
+      .count()
+  }
 }
 
 impl From<[i32; 10]> for HandsState {
@@ -235,6 +259,7 @@ mod tests {
   fn test_iterate_one_key_no_thumbs() {
     let handstates: Vec<_> = HandsState::iterate_one_key_no_thumbs().collect();
     assert_eq!(handstates.len(), 8);
+    assert!(handstates.iter().all(|hs| hs.count_pressed() == 1));
     assert_eq!(handstates, [
       [1, 0, 0, 0, 0, 0, 0, 0, 0, 0].into(),
       [0, 1, 0, 0, 0, 0, 0, 0, 0, 0].into(),
@@ -250,10 +275,11 @@ mod tests {
   #[test]
   fn test_iterate_two_key_no_thumbs() {
     let handstates: Vec<_> = HandsState::iterate_two_key_no_thumbs().collect();
-    assert_eq!(handstates.len(), (1..=7).sum());
+    assert_eq!(handstates.len(), (1..=7).sum::<usize>());
     assert!(handstates.iter().all(
       |hs| hs[4] == FingerState::Released && hs[5] == FingerState::Released
     ));
+    assert!(handstates.iter().all(|hs| hs.count_pressed() == 2));
     assert!(
       handstates.iter().all(|hs| hs
         .iter()
@@ -267,10 +293,13 @@ mod tests {
   fn test_iterate_one_two_key_no_thumbs() {
     let handstates: Vec<_> =
       HandsState::iterate_one_two_key_no_thumbs().collect();
-    assert_eq!(handstates.len(), (1..=8).sum());
+    assert_eq!(handstates.len(), (1..=8).sum::<usize>());
     assert!(handstates.iter().all(
       |hs| hs[4] == FingerState::Released && hs[5] == FingerState::Released
     ));
+    assert!(handstates
+      .iter()
+      .all(|hs| matches!(hs.count_pressed(), 1 | 2)));
     assert!(handstates.iter().all(|hs| {
       let c = hs.iter().filter(|fs| fs.is_pressed()).count();
       c == 1 || c == 2
@@ -286,6 +315,9 @@ mod tests {
       let c = hs.iter().filter(|fs| fs.is_pressed()).count();
       c == 1 || c == 2 || c == 3
     }));
+    assert!(handstates
+      .iter()
+      .all(|hs| matches!(hs.count_pressed(), 1..=3)));
     assert!(handstates
       .iter()
       .filter(|hs| hs.iter().filter(|fs| fs.is_pressed()).count() == 1)
@@ -312,5 +344,8 @@ mod tests {
     let handstates: Vec<_> =
       HandsState::iterate_one_two_key_all_states().collect();
     assert_eq!(handstates.len(), (1..=8).sum::<usize>() * 3 + 2);
+    assert!(handstates
+      .iter()
+      .all(|hs| matches!(hs.count_pressed(), 1..=3)));
   }
 }
