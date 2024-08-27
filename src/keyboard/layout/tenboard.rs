@@ -6,6 +6,7 @@ use std::{
 };
 
 use rand::prelude::*;
+use serde::{Deserialize, Serialize};
 
 use crate::keyboard::{
   hands::HandsState,
@@ -66,7 +67,9 @@ impl Display for dyn Tenboard {
 }
 
 /// Unconstrained Tenboard layout. Any symbol can be mapped to any combination.
+#[derive(Serialize, Deserialize)]
 pub struct TenboardUnconstrained {
+  #[serde(flatten)]
   layout: HashMap<char, HandsState>,
 }
 
@@ -87,7 +90,9 @@ impl Tenboard for TenboardUnconstrained {
 
 /// Constrained Tenboard layout.
 /// 'whitespace' and 'enter' are bound to single key thumb chords.
+#[derive(Serialize, Deserialize)]
 pub struct TenboardThumbConstrained {
+  #[serde(flatten)]
   layout: HashMap<char, HandsState>,
 }
 
@@ -117,10 +122,15 @@ impl Tenboard for TenboardThumbConstrained {
 /// lowercase letters are bound to other 8 single key chords.
 /// uppercase characters are bound to lowercase chords + `whitespace_hs`,
 /// punctuiation characters and numbers are bound to other chords + `newline_hs`.
+#[derive(Serialize, Deserialize)]
 pub struct TenboardModifierConstrained {
+  #[serde(rename = " ")]
   whitespace_hs: HandsState,
+  #[serde(rename = "\n")]
   newline_hs: HandsState,
+  #[serde(flatten)]
   lowercase_digit_layout: HashMap<char, HandsState>,
+  #[serde(flatten)]
   punctuation_layout: HashMap<char, HandsState>,
 }
 
@@ -182,35 +192,90 @@ mod tests {
   use super::*;
 
   #[test]
-  fn test_random_unconstrained_all_chars() -> Result<(), NoSuchChar> {
+  fn test_random_unconstrained_all_chars() {
     let tb = TenboardUnconstrained::new_random();
     let hs_set: HashSet<HandsState> = TYPABLE_CHARS
       .chars()
       .map(|ch| tb.try_type_char(ch))
-      .collect::<Result<_, _>>()?;
+      .collect::<Result<_, _>>()
+      .unwrap();
     assert_eq!(hs_set.len(), TYPABLE_CHARS.len());
-    Ok(())
+    assert!(tb.layout.values().all(|hs| hs.count_pressed() <= 3));
   }
 
   #[test]
-  fn test_random_thumb_constrained_all_chars() -> Result<(), NoSuchChar> {
+  fn test_random_thumb_constrained_all_chars() {
     let tb = TenboardThumbConstrained::new_random();
     let hs_set: HashSet<HandsState> = TYPABLE_CHARS
       .chars()
       .map(|ch| tb.try_type_char(ch))
-      .collect::<Result<_, _>>()?;
+      .collect::<Result<_, _>>()
+      .unwrap();
     assert_eq!(hs_set.len(), TYPABLE_CHARS.len());
-    Ok(())
+    assert!(tb.layout.values().all(|hs| hs.count_pressed() <= 3));
   }
 
   #[test]
-  fn test_random_modifier_constrained_all_chars() -> Result<(), NoSuchChar> {
+  fn test_random_modifier_constrained_all_chars() {
     let tb = TenboardModifierConstrained::new_random();
     let hs_set: HashSet<HandsState> = TYPABLE_CHARS
       .chars()
       .map(|ch| tb.try_type_char(ch))
-      .collect::<Result<_, _>>()?;
+      .collect::<Result<_, _>>()
+      .unwrap();
     assert_eq!(hs_set.len(), TYPABLE_CHARS.len());
+    assert!(tb
+      .lowercase_digit_layout
+      .values()
+      .all(|hs| hs.count_pressed() <= 2));
+    assert!(tb
+      .punctuation_layout
+      .values()
+      .all(|hs| matches!(hs.count_pressed(), 2 | 3)));
+  }
+
+  #[test]
+  fn test_unconstrained_serialization() -> Result<(), serde_json::Error> {
+    let tb = TenboardUnconstrained::new_random();
+    let json = serde_json::to_string(&tb)?;
+    let tb_de: TenboardUnconstrained = serde_json::from_str(&json)?;
+    for k in tb.layout.keys() {
+      assert_eq!(tb.layout.get(k), tb_de.layout.get(k))
+    }
+    Ok(())
+  }
+
+  #[test]
+  fn test_thumb_constrained_serialization() -> Result<(), serde_json::Error> {
+    let tb = TenboardThumbConstrained::new_random();
+    let json = serde_json::to_string(&tb)?;
+    let tb_de: TenboardThumbConstrained = serde_json::from_str(&json)?;
+    for k in tb.layout.keys() {
+      assert_eq!(tb.layout.get(k), tb_de.layout.get(k))
+    }
+    Ok(())
+  }
+
+  #[test]
+  fn test_modifier_constrained_serialization() -> Result<(), serde_json::Error>
+  {
+    let tb = TenboardModifierConstrained::new_random();
+    let json = serde_json::to_string(&tb)?;
+    let tb_de: TenboardModifierConstrained = serde_json::from_str(&json)?;
+    assert_eq!(tb.whitespace_hs, tb_de.whitespace_hs);
+    assert_eq!(tb.newline_hs, tb_de.newline_hs);
+    for k in tb.punctuation_layout.keys() {
+      assert_eq!(
+        tb.punctuation_layout.get(k),
+        tb_de.punctuation_layout.get(k)
+      )
+    }
+    for k in tb.lowercase_digit_layout.keys() {
+      assert_eq!(
+        tb.lowercase_digit_layout.get(k),
+        tb_de.lowercase_digit_layout.get(k)
+      )
+    }
     Ok(())
   }
 }
