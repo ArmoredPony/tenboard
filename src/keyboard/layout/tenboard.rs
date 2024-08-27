@@ -182,28 +182,35 @@ mod tests {
   use super::*;
 
   #[test]
-  fn test_random_type_all_chars() -> Result<(), NoSuchChar> {
+  fn test_random_unconstrained_all_chars() -> Result<(), NoSuchChar> {
     let tb = TenboardUnconstrained::new_random();
     let hs_set: HashSet<HandsState> = TYPABLE_CHARS
       .chars()
       .map(|ch| tb.try_type_char(ch))
       .collect::<Result<_, _>>()?;
     assert_eq!(hs_set.len(), TYPABLE_CHARS.len());
+    Ok(())
+  }
 
+  #[test]
+  fn test_random_thumb_constrained_all_chars() -> Result<(), NoSuchChar> {
     let tb = TenboardThumbConstrained::new_random();
     let hs_set: HashSet<HandsState> = TYPABLE_CHARS
       .chars()
       .map(|ch| tb.try_type_char(ch))
       .collect::<Result<_, _>>()?;
     assert_eq!(hs_set.len(), TYPABLE_CHARS.len());
+    Ok(())
+  }
 
+  #[test]
+  fn test_random_modifier_constrained_all_chars() -> Result<(), NoSuchChar> {
     let tb = TenboardModifierConstrained::new_random();
     let hs_set: HashSet<HandsState> = TYPABLE_CHARS
       .chars()
       .map(|ch| tb.try_type_char(ch))
       .collect::<Result<_, _>>()?;
     assert_eq!(hs_set.len(), TYPABLE_CHARS.len());
-
     Ok(())
   }
 }
