@@ -24,9 +24,9 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 )]
 #[repr(u8)]
 pub enum FingerState {
-  Pressed = 0,
+  Pressed = 1,
   #[default]
-  Released = 1,
+  Released = 0,
 }
 
 impl FingerState {
