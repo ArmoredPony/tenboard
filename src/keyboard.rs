@@ -85,17 +85,14 @@ mod tests {
   fn test_typing() {
     let mut tk = TestKeyboard {};
     let text = "cabcab";
-    assert_eq!(
-      tk.type_chars(text.chars()),
-      vec![
-        [0, 0, 1, 0, 0, 0, 0, 0, 0, 0].into(),
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0].into(),
-        [0, 1, 0, 0, 0, 0, 0, 0, 0, 0].into(),
-        [0, 0, 1, 0, 0, 0, 0, 0, 0, 0].into(),
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0].into(),
-        [0, 1, 0, 0, 0, 0, 0, 0, 0, 0].into(),
-      ]
-    );
+    assert_eq!(tk.type_chars(text.chars()), vec![
+      [0, 0, 1, 0, 0, 0, 0, 0, 0, 0].into(),
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0].into(),
+      [0, 1, 0, 0, 0, 0, 0, 0, 0, 0].into(),
+      [0, 0, 1, 0, 0, 0, 0, 0, 0, 0].into(),
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0].into(),
+      [0, 1, 0, 0, 0, 0, 0, 0, 0, 0].into(),
+    ]);
   }
 
   #[test]

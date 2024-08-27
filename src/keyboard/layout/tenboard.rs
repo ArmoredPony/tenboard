@@ -1,12 +1,20 @@
 //! Describes Tenboard keyboard layout.
 
-use std::{collections::HashMap, fmt::Debug, fmt::Display};
+use std::{
+  collections::HashMap,
+  fmt::{Debug, Display},
+};
 
 use rand::prelude::*;
 
 use crate::keyboard::{
-  hands::HandsState, Keyboard, NoSuchChar, DIGIT_CHARS, LOWERCASE_CHARS,
-  PUNCTUATION_CHARS, TYPABLE_CHARS,
+  hands::HandsState,
+  Keyboard,
+  NoSuchChar,
+  DIGIT_CHARS,
+  LOWERCASE_CHARS,
+  PUNCTUATION_CHARS,
+  TYPABLE_CHARS,
 };
 
 pub trait Tenboard {

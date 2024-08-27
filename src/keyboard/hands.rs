@@ -235,19 +235,16 @@ mod tests {
   fn test_iterate_one_key_no_thumbs() {
     let handstates: Vec<_> = HandsState::iterate_one_key_no_thumbs().collect();
     assert_eq!(handstates.len(), 8);
-    assert_eq!(
-      handstates,
-      [
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0].into(),
-        [0, 1, 0, 0, 0, 0, 0, 0, 0, 0].into(),
-        [0, 0, 1, 0, 0, 0, 0, 0, 0, 0].into(),
-        [0, 0, 0, 1, 0, 0, 0, 0, 0, 0].into(),
-        [0, 0, 0, 0, 0, 0, 1, 0, 0, 0].into(),
-        [0, 0, 0, 0, 0, 0, 0, 1, 0, 0].into(),
-        [0, 0, 0, 0, 0, 0, 0, 0, 1, 0].into(),
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 1].into(),
-      ]
-    )
+    assert_eq!(handstates, [
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0].into(),
+      [0, 1, 0, 0, 0, 0, 0, 0, 0, 0].into(),
+      [0, 0, 1, 0, 0, 0, 0, 0, 0, 0].into(),
+      [0, 0, 0, 1, 0, 0, 0, 0, 0, 0].into(),
+      [0, 0, 0, 0, 0, 0, 1, 0, 0, 0].into(),
+      [0, 0, 0, 0, 0, 0, 0, 1, 0, 0].into(),
+      [0, 0, 0, 0, 0, 0, 0, 0, 1, 0].into(),
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 1].into(),
+    ])
   }
 
   #[test]
