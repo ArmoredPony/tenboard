@@ -80,6 +80,7 @@ static ref LETTERS_LAYOUT: HashMap<char, HandsState> = HashMap::from([
   ('Y', [0, 0, 1, 0, 1, 0, 1, 0, 0, 0].into()),
   ('Z', [1, 0, 0, 0, 1, 0, 0, 1, 0, 0].into()),
   // symbols (no shift)
+  (' ', [0, 0, 0, 0, 0, 1, 0, 0, 0, 0].into()),
   ('!', [0, 0, 0, 0, 0, 0, 0, 1, 0, 1].into()),
   ('\'', [0, 0, 1, 0, 0, 0, 0, 0, 0, 1].into()),
   (';', [0, 0, 0, 0, 0, 0, 0, 0, 1, 1].into()),
@@ -104,6 +105,7 @@ static ref LETTERS_LAYOUT: HashMap<char, HandsState> = HashMap::from([
 ]);
 static ref SYMBOLS_LAYOUT: HashMap<char, HandsState> = HashMap::from([
   // no shift
+  (' ', [0, 0, 0, 0, 0, 1, 0, 0, 0, 0].into()),
   ('1', [1, 0, 0, 0, 0, 0, 0, 0, 0, 0].into()),
   ('`', [1, 0, 1, 0, 0, 0, 0, 0, 0, 0].into()),
   ('[', [1, 0, 0, 1, 0, 0, 0, 0, 0, 0].into()),
@@ -194,6 +196,7 @@ impl Keyboard for Asetniop {
       };
       if let Some(hs) = maybe_hs {
         handstates.push(hs.to_owned());
+        return Ok(handstates);
       }
       self.layout.swap();
       let maybe_hs = match self.layout {

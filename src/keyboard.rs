@@ -51,7 +51,7 @@ pub struct NoSuchChar {
 
 impl Display for NoSuchChar {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-    write!(f, "char {} was not found in keyboard", self.ch)
+    write!(f, "char '{}' was not found in keyboard", self.ch)
   }
 }
 
