@@ -25,7 +25,7 @@ pub trait Metric: Sized {
 }
 
 /// Measures finger usage.
-#[derive(Debug)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct FingerUsage {
   presses: [u32; 10],
 }
@@ -33,6 +33,10 @@ pub struct FingerUsage {
 impl FingerUsage {
   pub fn new() -> Self {
     Self { presses: [0; 10] }
+  }
+
+  pub fn values(self) -> [u32; 10] {
+    self.presses
   }
 }
 
@@ -55,7 +59,7 @@ impl Metric for FingerUsage {
 }
 
 /// Measures hand usage.
-#[derive(Debug)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct HandUsage {
   presses: [u32; 2],
 }
@@ -63,6 +67,10 @@ pub struct HandUsage {
 impl HandUsage {
   pub fn new() -> Self {
     Self { presses: [0; 2] }
+  }
+
+  pub fn values(self) -> [u32; 2] {
+    self.presses
   }
 }
 
@@ -94,7 +102,7 @@ impl From<FingerUsage> for HandUsage {
 }
 
 /// Measures finger alternation.
-#[derive(Debug)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct FingerAlternation {
   last_handstate: HandsState,
   consecutive_presses: [u32; 10],
@@ -106,6 +114,10 @@ impl FingerAlternation {
       last_handstate: [0; 10].into(),
       consecutive_presses: [0; 10],
     }
+  }
+
+  pub fn values(self) -> [u32; 10] {
+    self.consecutive_presses
   }
 }
 
@@ -135,7 +147,7 @@ impl Metric for FingerAlternation {
 }
 
 /// Measures hand alternation.
-#[derive(Debug)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct HandAlternation {
   last_hands_used: [bool; 2],
   consecutive_presses: [u32; 2],
@@ -147,6 +159,10 @@ impl HandAlternation {
       last_hands_used: [false; 2],
       consecutive_presses: [0; 2],
     }
+  }
+
+  pub fn values(self) -> [u32; 2] {
+    self.consecutive_presses
   }
 }
 
@@ -177,7 +193,7 @@ impl Metric for HandAlternation {
 }
 
 /// Measures finger usage balance. Compares it to target balance ratio.
-#[derive(Debug)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct FingerBalance {
   presses: [u32; 10],
   target_ratio: [f32; 10],
@@ -201,6 +217,12 @@ impl FingerBalance {
     let mut fb = Self::new();
     fb.set_ratio(target_ratio);
     fb
+  }
+
+  pub fn values(self) -> [f32; 10] {
+    let total_presses =
+      (self.presses.iter().sum::<u32>() as usize + self.presses.len()) as f32;
+    self.presses.map(|p| p as f32 / total_presses)
   }
 }
 
@@ -239,7 +261,7 @@ impl From<FingerUsage> for FingerBalance {
 }
 
 /// Measures hand usage balance. Compares it to target balance ratio.
-#[derive(Debug)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct HandBalance {
   presses: [u32; 2],
   target_ratio: [f32; 2],
@@ -263,6 +285,12 @@ impl HandBalance {
     let mut fb = Self::new();
     fb.set_ratio(target_ratio);
     fb
+  }
+
+  pub fn values(self) -> [f32; 2] {
+    let total_presses =
+      (self.presses.iter().sum::<u32>() as usize + self.presses.len()) as f32;
+    self.presses.map(|p| p as f32 / total_presses)
   }
 }
 
