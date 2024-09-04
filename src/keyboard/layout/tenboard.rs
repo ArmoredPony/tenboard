@@ -92,26 +92,37 @@ impl Tenboard for TenboardUnconstrained {
 /// 'whitespace' and 'enter' are bound to single key thumb chords.
 #[derive(Serialize, Deserialize)]
 pub struct TenboardThumbConstrained {
+  #[serde(rename = " ")]
+  whitespace_hs: HandsState,
+  #[serde(rename = "\n")]
+  newline_hs: HandsState,
   #[serde(flatten)]
   layout: HashMap<char, HandsState>,
 }
 
 impl Tenboard for TenboardThumbConstrained {
   fn new_random() -> Self {
+    let (whitespace_hs, newline_hs) = if rand::thread_rng().gen_bool(0.5) {
+      (HandsState::left_thumb(), HandsState::right_thumb())
+    } else {
+      (HandsState::right_thumb(), HandsState::left_thumb())
+    };
     let mut handsstates: Vec<_> =
       HandsState::iterate_one_two_key_with_thumbs().collect();
     handsstates.shuffle(&mut rand::thread_rng());
     let chars_iter =
       TYPABLE_CHARS.chars().filter(|&ch| ch != ' ' && ch != '\n');
     Self {
+      whitespace_hs,
+      newline_hs,
       layout: HashMap::from_iter(chars_iter.zip(handsstates)),
     }
   }
 
   fn try_type_char(&self, ch: char) -> Result<HandsState, NoSuchChar> {
     match ch {
-      ' ' => Ok(HandsState::left_thumb()),
-      '\n' => Ok(HandsState::right_thumb()),
+      ' ' => Ok(self.whitespace_hs),
+      '\n' => Ok(self.newline_hs),
       _ => self.layout.get(&ch).ok_or(NoSuchChar { ch }).copied(),
     }
   }
