@@ -99,6 +99,8 @@ impl HandsState {
 
   /// Returns iterator over unique one key `HandsState`s without left and
   /// right thumbs.
+  ///
+  /// - `|.... .....`, ..., `..... ....|` *(one key, no thumbs)*
   pub fn iterate_one_key_no_thumbs() -> impl Iterator<Item = HandsState> {
     (0..4).chain(6..10).map(|i| {
       let mut fs = [0; 10];
@@ -110,6 +112,9 @@ impl HandsState {
   /// Returns iterator over unique two key `HandsState`s without left and
   /// right thumbs modifiers.
   /// `HandsState`s with left and right thumbs pressed alone aren't inlcuded.
+  ///
+  /// - `||... .....`, `|.|.. .....`, ..., `..... ..|.|`, `..... ...||`
+  ///   *(two keys, no thumbs)*
   pub fn iterate_two_key_no_thumbs() -> impl Iterator<Item = HandsState> {
     (0..7).flat_map(|i| {
       (i..8)
@@ -130,6 +135,10 @@ impl HandsState {
   /// Returns iterator over unique one and two keys `HandsState`s without left
   /// and right thumbs modifiers.
   /// `HandsState`s with left and right thumbs pressed alone aren't inlcuded.
+  ///
+  /// - `|.... .....`, ..., `..... ....|` *(one key, no thumbs)*
+  /// - `||... .....`, `|.|.. .....`, ..., `..... ..|.|`, `..... ...||`
+  ///   *(two keys, no thumbs)*
   pub fn iterate_one_two_key_no_thumbs() -> impl Iterator<Item = HandsState> {
     Self::iterate_one_key_no_thumbs().chain(Self::iterate_two_key_no_thumbs())
   }
@@ -137,6 +146,14 @@ impl HandsState {
   /// Returns iterator over two key `HandsState`s with and without left and
   /// right thumbs modifiers.
   /// `HandsState`s with left and right thumbs pressed alone aren't inlcuded.
+  ///
+  /// - `|.... .....`, ..., `..... ....|` *(one key, no thumbs)*
+  /// - `||... .....`, `|.|.. .....`, ..., `..... ..|.|`, `..... ...||`
+  ///   *(two keys, no thumbs)*
+  /// - `|...| .....`, `.|..| .....`, ..., `..... |..|.` , `..... |...|`
+  ///   *(two key with left and right thumbs)*
+  /// - `||..| .....`, `|.|.| .....`, ..., `..... |.|.|`, `..... |..||`
+  ///   *(three keys with left and right thumbs)*
   pub fn iterate_one_two_key_with_thumbs() -> impl Iterator<Item = HandsState> {
     Self::iterate_one_two_key_no_thumbs()
       .chain(
@@ -152,6 +169,15 @@ impl HandsState {
   /// Returns iterator over one and two key `HandsState`s with and without
   /// left and right thumbs modifiers.
   /// `HandsState`s with left and right thumbs pressed alone are inlcuded.
+  ///
+  /// - `|.... .....`, ..., `..... ....|` *(one key, no thumbs)*
+  /// - `....| .....`, `..... |....` *(left and right thumbs alone)*
+  /// - `||... .....`, `|.|.. .....`, ..., `..... ..|.|`, `..... ...||`
+  ///   *(two keys, no thumbs)*
+  /// - `|...| .....`, `.|..| .....`, ..., `..... |..|.` , `..... |...|`
+  ///   *(two key with left and right thumbs)*
+  /// - `||..| .....`, `|.|.| .....`, ..., `..... |.|.|`, `..... |..||`
+  ///   *(three keys with left and right thumbs)*
   pub fn iterate_one_two_key_all_states() -> impl Iterator<Item = HandsState> {
     Self::iterate_one_two_key_with_thumbs()
       .chain([HandsState::left_thumb(), HandsState::right_thumb()])

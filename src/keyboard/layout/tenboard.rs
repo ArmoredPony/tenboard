@@ -20,7 +20,7 @@ use crate::keyboard::{
 
 pub trait Tenboard {
   /// Creates a new Tenboard keyboard layout where each character
-  /// corresponds to a random `HandsState` with one or two keys pressed.
+  /// corresponds to a random `HandsState`.
   fn new_random() -> Self
   where
     Self: Sized;
@@ -120,8 +120,9 @@ impl Tenboard for TenboardThumbConstrained {
 /// Constrained Tenboard layout.
 /// 'whitespace' and 'enter' are bound to single key thumb chords,
 /// lowercase letters are bound to other 8 single key chords.
-/// uppercase characters are bound to lowercase chords + `whitespace_hs`,
-/// punctuiation characters and numbers are bound to other chords + `newline_hs`.
+/// uppercase characters are bound to lowercase chords + one of the thumbs,
+/// punctuiation characters and numbers are bound to other chords + the other
+/// thumb.
 #[derive(Serialize, Deserialize)]
 pub struct TenboardModifierConstrained {
   #[serde(rename = " ")]
