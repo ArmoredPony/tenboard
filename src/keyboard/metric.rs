@@ -351,7 +351,7 @@ mod tests {
   struct TestKeyboard {}
 
   impl TestKeyboard {
-    fn try_type_char(&mut self, ch: char) -> Result<HandsState, NoSuchChar> {
+    fn try_type_char(&self, ch: char) -> Result<HandsState, NoSuchChar> {
       match ch {
         'a' => Ok([1, 0, 0, 0, 0, 0, 0, 0, 0, 0].into()),
         'b' => Ok([0, 1, 0, 0, 0, 0, 0, 0, 0, 0].into()),
@@ -370,7 +370,7 @@ mod tests {
 
   impl Keyboard for TestKeyboard {
     fn try_type_chars(
-      &mut self,
+      &self,
       chars: impl Iterator<Item = char>,
     ) -> Result<Vec<HandsState>, NoSuchChar> {
       chars.map(|ch| self.try_type_char(ch)).collect()
@@ -379,7 +379,7 @@ mod tests {
 
   #[test]
   fn test_finger_usage() {
-    let mut kb = TestKeyboard {};
+    let kb = TestKeyboard {};
     let text = "abcdefadab";
     let fu = FingerUsage::new().updated(&kb.type_chars(text.chars()));
     assert_eq!(fu.presses, [3, 2, 1, 0, 0, 0, 0, 2, 1, 1]);
@@ -388,7 +388,7 @@ mod tests {
 
   #[test]
   fn test_hand_usage() {
-    let mut kb = TestKeyboard {};
+    let kb = TestKeyboard {};
     let text = "abcdefadab";
     let hu = HandUsage::new().updated(&kb.type_chars(text.chars()));
     assert_eq!(hu.presses, [6, 4]);
@@ -402,7 +402,7 @@ mod tests {
 
   #[test]
   fn test_finger_alternation() {
-    let mut kb = TestKeyboard {};
+    let kb = TestKeyboard {};
     let text = "abcdef";
     let fa = FingerAlternation::new().updated(&kb.type_chars(text.chars()));
     assert_eq!(fa.consecutive_presses, [0; 10]);
@@ -416,7 +416,7 @@ mod tests {
 
   #[test]
   fn test_hand_alternation() {
-    let mut kb = TestKeyboard {};
+    let kb = TestKeyboard {};
     let text = "adbecf";
     let ha = HandAlternation::new().updated(&kb.type_chars(text.chars()));
     assert_eq!(ha.consecutive_presses, [0; 2]);
@@ -434,7 +434,7 @@ mod tests {
     assert_eq!(fb.presses, [0; 10]);
     assert_eq!(fb.score(), 0.0);
 
-    let mut kb = TestKeyboard {};
+    let kb = TestKeyboard {};
     let text = "abcdefpqrs";
     let fb = FingerBalance::new().updated(&kb.type_chars(text.chars()));
     assert_eq!(fb.presses, [1; 10]);
@@ -459,7 +459,7 @@ mod tests {
     assert_eq!(hb.presses, [0, 0]);
     assert_eq!(hb.score(), 0.0);
 
-    let mut kb = TestKeyboard {};
+    let kb = TestKeyboard {};
     let text = "abcdefpqrs";
     let hb = HandBalance::new().updated(&kb.type_chars(text.chars()));
     assert_eq!(hb.presses, [5, 5]);

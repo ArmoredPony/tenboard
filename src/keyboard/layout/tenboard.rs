@@ -33,7 +33,7 @@ pub trait Tenboard {
 
 impl<T: Tenboard> Keyboard for T {
   fn try_type_chars(
-    &mut self,
+    &self,
     chars: impl Iterator<Item = char>,
   ) -> Result<Vec<HandsState>, NoSuchChar> {
     chars.map(|ch| self.try_type_char(ch)).collect()
@@ -71,6 +71,32 @@ impl Display for dyn Tenboard {
 pub struct TenboardUnconstrained {
   #[serde(flatten)]
   layout: HashMap<char, HandsState>,
+}
+
+impl TenboardUnconstrained {
+  pub fn swap_states(&mut self, ch1: char, ch2: char) {
+    let hs1 = self
+      .layout
+      .remove(&ch1)
+      .unwrap_or_else(|| panic!("'{}' wasn't found", ch1));
+    let hs2 = self
+      .layout
+      .remove(&ch2)
+      .unwrap_or_else(|| panic!("'{}' wasn't found", ch2));
+    self.layout.insert(ch1, hs2);
+    self.layout.insert(ch2, hs1);
+  }
+}
+
+impl FromIterator<(char, HandsState)> for TenboardUnconstrained {
+  fn from_iter<T>(iter: T) -> Self
+  where
+    T: IntoIterator<Item = (char, HandsState)>,
+  {
+    let layout = HashMap::from_iter(iter);
+    assert!(TYPABLE_CHARS.chars().all(|ch| layout.contains_key(&ch)));
+    Self { layout }
+  }
 }
 
 impl Tenboard for TenboardUnconstrained {
@@ -130,9 +156,9 @@ impl Tenboard for TenboardThumbConstrained {
 
 /// Constrained Tenboard layout.
 /// 'whitespace' and 'enter' are bound to single key thumb chords,
-/// lowercase letters are bound to other 8 single key chords.
+/// lowercase letters and digits are bound to other 8 single key chords.
 /// uppercase characters are bound to lowercase chords + one of the thumbs,
-/// punctuiation characters and numbers are bound to other chords + the other
+/// punctuiation characters are bound to other chords + the other
 /// thumb.
 #[derive(Serialize, Deserialize)]
 pub struct TenboardModifierConstrained {

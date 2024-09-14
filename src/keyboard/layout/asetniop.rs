@@ -1,6 +1,6 @@
 //! Describes ASETNIOP keyboard layout.
 
-use std::collections::HashMap;
+use std::{cell::Cell, collections::HashMap};
 
 use lazy_static::lazy_static;
 
@@ -152,6 +152,7 @@ static ref SYMBOLS_LAYOUT: HashMap<char, HandsState> = HashMap::from([
 ]);
 }
 
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 enum Layout {
   Letters(&'static HashMap<char, HandsState>),
   Symbols(&'static HashMap<char, HandsState>),
@@ -165,14 +166,6 @@ impl Layout {
   fn new_symbols() -> Layout {
     Layout::Symbols(&SYMBOLS_LAYOUT)
   }
-
-  /// Swaps the layout from letters to symbols.
-  fn swap(&mut self) {
-    match self {
-      Layout::Letters(_) => *self = Self::new_symbols(),
-      Layout::Symbols(_) => *self = Self::new_letters(),
-    }
-  }
 }
 
 impl Default for Layout {
@@ -183,25 +176,36 @@ impl Default for Layout {
 
 #[derive(Default)]
 pub struct Asetniop {
-  layout: Layout,
+  layout: Cell<Layout>,
+}
+
+impl Asetniop {
+  /// Swaps the layout from letters to symbols.
+  fn swap_layout(&self) {
+    let layout = match self.layout.get() {
+      Layout::Letters(_) => Layout::new_symbols(),
+      Layout::Symbols(_) => Layout::new_letters(),
+    };
+    self.layout.set(layout);
+  }
 }
 
 impl Keyboard for Asetniop {
   fn try_type_chars(
-    &mut self,
+    &self,
     chars: impl Iterator<Item = char>,
   ) -> Result<Vec<HandsState>, NoSuchChar> {
     let mut handstates: Vec<HandsState> = Vec::new();
     for ch in chars {
-      let maybe_hs = match self.layout {
+      let maybe_hs = match self.layout.get() {
         Layout::Letters(l) => l.get(&ch),
         Layout::Symbols(l) => l.get(&ch),
       };
       if let Some(hs) = maybe_hs {
         handstates.push(hs.to_owned());
       } else {
-        self.layout.swap();
-        let maybe_hs = match self.layout {
+        self.swap_layout();
+        let maybe_hs = match self.layout.get() {
           Layout::Letters(l) => l.get(&ch),
           Layout::Symbols(l) => l.get(&ch),
         };

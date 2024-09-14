@@ -24,7 +24,7 @@ pub trait Keyboard {
   /// for given char sequence to be typed or an error if a char can't be
   /// typed with this keyboard.
   fn try_type_chars(
-    &mut self,
+    &self,
     chars: impl Iterator<Item = char>,
   ) -> Result<Vec<HandsState>, NoSuchChar>;
 
@@ -35,10 +35,7 @@ pub trait Keyboard {
   ///
   /// Panics if any char in the sequence cannot be typed with this keyboard.
   /// To avoid panic, use [Keyboard::try_type_chars].
-  fn type_chars(
-    &mut self,
-    text: impl Iterator<Item = char>,
-  ) -> Vec<HandsState> {
+  fn type_chars(&self, text: impl Iterator<Item = char>) -> Vec<HandsState> {
     self.try_type_chars(text).unwrap_or_else(|e| panic!("{e}"))
   }
 }
@@ -62,7 +59,7 @@ mod tests {
   struct TestKeyboard {}
 
   impl TestKeyboard {
-    fn try_type_char(&mut self, ch: char) -> Result<HandsState, NoSuchChar> {
+    fn try_type_char(&self, ch: char) -> Result<HandsState, NoSuchChar> {
       match ch {
         'a' => Ok([1, 0, 0, 0, 0, 0, 0, 0, 0, 0].into()),
         'b' => Ok([0, 1, 0, 0, 0, 0, 0, 0, 0, 0].into()),
@@ -74,7 +71,7 @@ mod tests {
 
   impl Keyboard for TestKeyboard {
     fn try_type_chars(
-      &mut self,
+      &self,
       chars: impl Iterator<Item = char>,
     ) -> Result<Vec<HandsState>, NoSuchChar> {
       chars.map(|ch| self.try_type_char(ch)).collect()
@@ -83,7 +80,7 @@ mod tests {
 
   #[test]
   fn test_typing() {
-    let mut tk = TestKeyboard {};
+    let tk = TestKeyboard {};
     let text = "cabcab";
     assert_eq!(tk.type_chars(text.chars()), vec![
       [0, 0, 1, 0, 0, 0, 0, 0, 0, 0].into(),
@@ -97,7 +94,7 @@ mod tests {
 
   #[test]
   fn test_char_not_found() {
-    let mut tk = TestKeyboard {};
+    let tk = TestKeyboard {};
     let text = "abcX";
     assert_eq!(tk.try_type_chars(text.chars()), Err(NoSuchChar { ch: 'X' }));
   }
@@ -105,7 +102,7 @@ mod tests {
   #[test]
   #[should_panic(expected = "char X was not found in keyboard")]
   fn test_char_not_found_panic() {
-    let mut tk = TestKeyboard {};
+    let tk = TestKeyboard {};
     let text = "abcX";
     tk.type_chars(text.chars());
   }
